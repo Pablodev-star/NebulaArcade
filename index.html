@@ -8,52 +8,50 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
-  --grad1:#ff8a00;--grad2:#ffd200;--text:#1b1f24;--border:#e5e7eb;
-  --muted:#6b7280;--bg:#fff;
+  --grad1:#ff8a00;--grad2:#ffd200;--text:#1b1f24;--border:#e5e7eb;--muted:#6b7280;--bg:#fff;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
 header{
   display:flex;align-items:center;justify-content:space-between;
   padding:14px 28px;border-bottom:1px solid var(--border);
-  background:#fff;position:sticky;top:0;z-index:10;
+  background:#fff;position:sticky;top:0;z-index:20;
 }
 .logo{font-family:"Fredoka One";font-size:22px;
 background:linear-gradient(90deg,var(--grad1),var(--grad2));
 -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .userMenu{position:relative;}
 .userBtn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;
-background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;font-weight:700;
-cursor:pointer;transition:.2s;}
+background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;font-weight:700;cursor:pointer;transition:.2s;}
 .userBtn:hover{filter:brightness(1.05);}
 .avatar{width:28px;height:28px;border-radius:50%;background:#fff;color:#2a2000;
 display:flex;align-items:center;justify-content:center;font-family:"Fredoka One";}
 .dropdown{
   position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--border);
   border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.1);
-  display:none;flex-direction:column;min-width:160px;overflow:hidden;
+  display:none;flex-direction:column;min-width:180px;overflow:hidden;z-index:30;
 }
 .dropdown button{
   background:none;border:0;text-align:left;padding:10px 16px;cursor:pointer;
-  font-weight:600;color:var(--text);transition:.15s;
+  font-weight:600;color:var(--text);transition:.15s;width:100%;
 }
 .dropdown button:hover{background:#f9f9f9;}
-main{max-width:900px;margin:30px auto;padding:0 20px;}
-.searchBox{margin-bottom:20px;display:flex;gap:10px;}
+main{max-width:1000px;margin:24px auto 90px;padding:0 18px;}
+.searchBox{margin-bottom:18px;display:flex;gap:10px;}
 .searchBox input{
   flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:15px;
 }
 .searchBox input:focus{border-color:#ffd24d;outline:none;box-shadow:0 0 0 4px #ffe08d60;}
-.gamesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.gamesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
 .gameCard{border:1px solid var(--border);border-radius:14px;background:#fff;
-box-shadow:0 6px 18px rgba(0,0,0,.05);padding:12px;transition:.2s;cursor:pointer;}
+box-shadow:0 6px 18px rgba(0,0,0,.05);padding:12px;transition:.2s;cursor:pointer;display:flex;flex-direction:column;gap:8px;}
 .gameCard:hover{transform:translateY(-3px);}
-.profileView{max-width:600px;margin:40px auto;text-align:center;}
-.profileAvatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));
-display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:36px;margin:0 auto 10px;}
-.stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted);}
+.cardTitle{font-weight:800}
+.cardPreview{width:100%;height:140px;border:0;border-radius:10px;background:#f3f3f3;}
+.metaMuted{color:var(--muted);font-size:13px}
 .hidden{display:none;}
-.wrapAuth{max-width:400px;margin:10vh auto;padding:24px;border:1px solid var(--border);
+
+.wrapAuth{max-width:420px;margin:10vh auto;padding:24px;border:1px solid var(--border);
 border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.06);background:#fff;}
 input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--border);
 border-radius:12px;font-size:15px}
@@ -65,10 +63,35 @@ background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s}
 .error{color:#b91c1c;font-size:14px;margin-top:6px;text-align:center}
 .link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;
 text-align:center;display:block;margin-top:12px}
-.gamePage{text-align:center;max-width:700px;margin:0 auto;}
-.previewBox{width:100%;height:300px;background:#f3f3f3;border-radius:14px;
-display:flex;align-items:center;justify-content:center;font-size:60px;}
-.metaInfo{display:flex;justify-content:center;gap:20px;color:var(--muted);margin:10px 0;}
+
+.profileView{max-width:700px;margin:0 auto;}
+.profileHeader{text-align:center;margin-bottom:16px}
+.profileAvatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));
+display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:40px;margin:0 auto 10px;}
+.stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted);}
+
+.gamePage{max-width:900px;margin:0 auto;}
+.previewLarge{width:100%;height:380px;border:0;border-radius:14px;background:#f3f3f3;}
+.gameHeader{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.gameActions{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.likeBtn,.dislikeBtn{comp:btn}
+.likeBtn,.dislikeBtn{border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;}
+.playBtn{border:0;border-radius:14px;padding:14px 28px;font-weight:900;cursor:pointer;background:linear-gradient(90deg,var(--grad1),var(--grad2));font-size:16px;color:#2a2000}
+
+.fab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;font-size:28px;color:#2a2000;
+background:linear-gradient(135deg,var(--grad1),var(--grad2));
+box-shadow:0 10px 24px rgba(255,138,0,.35);cursor:pointer;z-index:25;}
+.fab:hover{transform:translateY(-2px)}
+
+.uploader{max-width:900px;margin:0 auto;}
+.tabbar{display:flex;gap:10px;margin-top:10px}
+.tabbar button{border:1px solid var(--border);background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
+.tabbar button.active{background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;border:0}
+.editor{width:100%;height:260px;border:1px solid var(--border);border-radius:12px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:14px}
+.previewEdit{width:100%;height:260px;border:0;border-radius:12px;background:#f3f3f3}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.counter{color:var(--muted);font-size:13px;margin-left:auto}
 </style>
 </head>
 <body>
@@ -107,104 +130,145 @@ display:flex;align-items:center;justify-content:center;font-size:60px;}
   </div>
 </div>
 
-<!-- APP PRINCIPAL -->
+<!-- APP -->
 <main id="appView" class="hidden">
+  <!-- HOME -->
   <div id="homeView">
     <div class="searchBox">
-      <input id="searchInput" type="text" placeholder="Buscar juegos...">
+      <input id="searchInput" type="text" placeholder="Buscar juegos por nombre...">
     </div>
-    <div class="gamesGrid" id="gamesGrid">
-      <div class="gameCard" data-id="1" data-name="Ejemplo 1" data-desc="Primer juego de prueba" data-creator="Pablodev" data-likes="3" data-visits="10">🎮 Ejemplo 1</div>
-      <div class="gameCard" data-id="2" data-name="Ejemplo 2" data-desc="Segundo juego de ejemplo" data-creator="Lucía" data-likes="1" data-visits="4">🎮 Ejemplo 2</div>
-      <div class="gameCard" data-id="3" data-name="Ejemplo 3" data-desc="Otro juego divertido" data-creator="Carlos" data-likes="7" data-visits="19">🎮 Ejemplo 3</div>
-    </div>
+    <div class="gamesGrid" id="gamesGrid"></div>
   </div>
 
+  <!-- PERFIL -->
   <div id="profileView" class="hidden profileView">
-    <div class="profileAvatar" id="profileAvatar">?</div>
-    <h2 id="profileName">Usuario</h2>
-    <div class="stats">
-      <div>❤️ <span id="likesCount">0</span> Likes</div>
-      <div>👁️ <span id="visitsCount">0</span> Visitas</div>
+    <div class="profileHeader">
+      <div class="profileAvatar" id="profileAvatar">?</div>
+      <h2 id="profileName">Usuario</h2>
+      <div class="stats">
+        <div>❤️ <span id="likesCount">0</span> Likes</div>
+        <div>👁️ <span id="visitsCount">0</span> Visitas</div>
+      </div>
     </div>
-    <h3>Juegos subidos</h3>
-    <div class="gamesGrid" id="userGamesGrid">
-      <div class="gameCard muted" style="text-align:center;">No has subido ningún juego.</div>
+    <h3 style="text-align:center;margin-bottom:8px;">Juegos subidos</h3>
+    <div class="gamesGrid" id="userGamesGrid"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button id="backHomeBtn" class="btn" style="width:auto;">🏠 Volver al inicio</button>
     </div>
-    <button id="backHomeBtn" class="btn" style="width:auto;margin-top:24px;">🏠 Volver al inicio</button>
   </div>
 
+  <!-- GAME PAGE -->
   <div id="gameView" class="hidden gamePage">
-    <div class="previewBox" id="gamePreview">🎮</div>
-    <h2 id="gameTitle" style="margin-top:10px;">Nombre del juego</h2>
-    <p id="gameDesc" style="margin:6px 0 12px;"></p>
-    <div class="metaInfo">
-      <span>❤️ <span id="likeCount">0</span></span>
-      <span>👁️ <span id="visitCount">0</span></span>
+    <iframe id="gamePreview" class="previewLarge" sandbox="allow-scripts"></iframe>
+    <div class="gameHeader">
+      <h2 id="gameTitle">Nombre del juego</h2>
+      <p id="gameDesc" class="metaMuted"></p>
+      <div class="metaMuted">
+        ❤️ <span id="likeCount">0</span> · 👁️ <span id="visitCount">0</span>
+      </div>
+      <p>Creador: <span id="gameCreator" style="color:#ff8a00;font-weight:700;cursor:pointer;">Usuario</span></p>
+      <div class="gameActions">
+        <button id="likeBtn" class="likeBtn">Like</button>
+        <button id="dislikeBtn" class="dislikeBtn">Dislike</button>
+        <button id="playBtn" class="playBtn">Jugar</button>
+      </div>
+      <div style="margin-top:16px"><button id="backHomeFromGame" class="btn">🏠 Volver</button></div>
     </div>
-    <p>Creador: <span id="gameCreator" style="color:#ff8a00;font-weight:700;cursor:pointer;">Usuario</span></p>
-    <div style="margin-top:20px;display:flex;justify-content:center;gap:12px;">
-      <button id="likeBtn" class="btn">❤️ Like</button>
-      <button id="dislikeBtn" class="btn" style="background:#ccc;color:#000;">👎 Dislike</button>
-      <button id="playBtn" class="btn">▶️ Jugar</button>
+  </div>
+
+  <!-- UPLOAD (CREAR JUEGO) -->
+  <div id="uploadView" class="hidden uploader">
+    <h2 style="text-align:center;margin-bottom:6px;">Subir nuevo juego</h2>
+    <div class="row">
+      <input id="gameNameIn" type="text" placeholder="Nombre del juego" style="flex:1">
     </div>
-    <button id="backHomeFromGame" class="btn" style="margin-top:20px;">🏠 Volver</button>
+    <div class="row">
+      <input id="gameDescIn" type="text" placeholder="Descripción corta" style="flex:1">
+    </div>
+    <div class="tabbar">
+      <button id="tabEdit" class="active">Editor</button>
+      <button id="tabPreview">Preview</button>
+      <span class="counter" id="byteCounter">0 / 1,048,576 bytes</span>
+    </div>
+    <textarea id="codeEditor" class="editor" placeholder="Pega o escribe tu HTML + CSS + JS aquí (todo en uno)"></textarea>
+    <iframe id="codePreview" class="previewEdit hidden" sandbox="allow-scripts"></iframe>
+    <div class="row" style="margin-top:12px;justify-content:center;">
+      <button id="submitGameBtn" class="btn">Subir juego</button>
+      <button id="cancelUploadBtn" class="btn" style="background:#eee;color:#222;">Cancelar</button>
+    </div>
   </div>
 </main>
 
+<!-- FAB -->
+<button id="fab" class="fab hidden" title="Subir juego">+</button>
+
 <script>
+/* -------------------- Supabase -------------------- */
 const SUPA_URL="https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
 const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
-const topbar=document.getElementById("topbar");
-const authView=document.getElementById("authView");
-const appView=document.getElementById("appView");
-const homeView=document.getElementById("homeView");
-const profileView=document.getElementById("profileView");
-const gameView=document.getElementById("gameView");
-const userMenu=document.getElementById("userMenu");
-const userBtn=document.getElementById("userBtn");
-const dropdown=document.getElementById("dropdown");
-const userAvatar=document.getElementById("userAvatar");
-const userNameTop=document.getElementById("userNameTop");
-const deleteBtn=document.getElementById("deleteBtn");
-const logoutBtn=document.getElementById("logoutBtn");
-const viewProfileBtn=document.getElementById("viewProfileBtn");
-const backHomeBtn=document.getElementById("backHomeBtn");
-const backHomeFromGame=document.getElementById("backHomeFromGame");
+/* -------------------- DOM refs -------------------- */
+const topbar=$("topbar"), authView=$("authView"), appView=$("appView");
+const homeView=$("homeView"), profileView=$("profileView"), gameView=$("gameView"), uploadView=$("uploadView");
+const userMenu=$("userMenu"), userBtn=$("userBtn"), dropdown=$("dropdown");
+const userAvatar=$("userAvatar"), userNameTop=$("userNameTop"), deleteBtn=$("deleteBtn");
+const logoutBtn=$("logoutBtn"), viewProfileBtn=$("viewProfileBtn"), backHomeBtn=$("backHomeBtn");
+const gamesGrid=$("gamesGrid"), userGamesGrid=$("userGamesGrid"), searchInput=$("searchInput");
+const fab=$("fab");
+const gamePreview=$("gamePreview"), gameTitle=$("gameTitle"), gameDesc=$("gameDesc"), likeCount=$("likeCount"), visitCount=$("visitCount"), gameCreator=$("gameCreator");
+const likeBtn=$("likeBtn"), dislikeBtn=$("dislikeBtn"), playBtn=$("playBtn"), backHomeFromGame=$("backHomeFromGame");
+const profileAvatar=$("profileAvatar"), profileName=$("profileName"), likesCount=$("likesCount"), visitsCount=$("visitsCount");
+const gameNameIn=$("gameNameIn"), gameDescIn=$("gameDescIn"), codeEditor=$("codeEditor"), codePreview=$("codePreview");
+const tabEdit=$("tabEdit"), tabPreview=$("tabPreview"), byteCounter=$("byteCounter");
+const loginForm=$("loginForm"), signupForm=$("signupForm"), showSignup=$("showSignup"), showLogin=$("showLogin");
+const loginEmail=$("loginEmail"), loginPass=$("loginPass"), loginBtn=$("loginBtn"), loginError=$("loginError");
+const signupBtn=$("signupBtn"), signupError=$("signupError"), nick=$("nick"), signupEmail=$("signupEmail"), signupPass=$("signupPass");
+const cancelUploadBtn=$("cancelUploadBtn"), submitGameBtn=$("submitGameBtn");
 
+/* -------------------- State -------------------- */
 let currentUser=null;
+let allGames=[];       // [{id,title,description,code,likes,dislikes,visits,creator_id,created_at, creator_name?}]
+let currentGame=null;  // game currently open
+let viewingUserId=null; // profile being viewed
 
-// Cambiar entre login y registro
+/* -------------------- Utils -------------------- */
+function $(id){return document.getElementById(id);}
+function closeDropdown(){ dropdown.style.display="none"; }
+function bytesOf(str){ return new Blob([str||""]).size; }
+function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</body></html>"; }
+function nic(s){ return (s||"").trim(); }
+
+/* -------------------- Auth UI -------------------- */
 showSignup.onclick=()=>{loginForm.classList.add("hidden");signupForm.classList.remove("hidden");};
 showLogin.onclick=()=>{signupForm.classList.add("hidden");loginForm.classList.remove("hidden");};
 
-// Registro
 signupBtn.onclick=async()=>{
-  const nickname=nick.value.trim(), email=signupEmail.value.trim(), pass=signupPass.value;
+  const nickname=nic(nick.value), email=nic(signupEmail.value), pass=signupPass.value;
   signupError.textContent="";
   if(!nickname||!email||!pass){signupError.textContent="Completa todos los campos.";return;}
   const {error}=await supabase.auth.signUp({email,password:pass,options:{data:{nickname}}});
-  if(error)signupError.textContent=error.message;else signupError.textContent="Cuenta creada correctamente.";
+  if(error){signupError.textContent=error.message;return;}
+  signupError.textContent="Cuenta creada. Revisa tu correo si procede.";
 };
 
-// Login
 loginBtn.onclick=async()=>{
-  const email=loginEmail.value.trim(), pass=loginPass.value;
-  loginError.textContent="";
+  const email=nic(loginEmail.value), pass=loginPass.value; loginError.textContent="";
   const {error}=await supabase.auth.signInWithPassword({email,password:pass});
   if(error){loginError.textContent=error.message;return;}
-  loadUser();
+  await loadUser(); await loadGames();
 };
 
-// Estado de sesión
-supabase.auth.onAuthStateChange((_e,session)=>{if(session)loadUser();else showAuth();});
+logoutBtn.onclick=async()=>{ await supabase.auth.signOut(); showAuth(); closeDropdown(); };
 
-// Cargar usuario
+/* -------------------- Session -------------------- */
+supabase.auth.onAuthStateChange(async (_e,session)=>{
+  if(session){ await loadUser(); await loadGames(); } else { showAuth(); }
+});
+
 async function loadUser(){
   const {data:{user}}=await supabase.auth.getUser();
-  if(!user){showAuth();return;}
+  if(!user){ showAuth(); return; }
   currentUser=user;
   const nick=user.user_metadata?.nickname||user.email;
   userAvatar.textContent=nick.charAt(0).toUpperCase();
@@ -213,77 +277,247 @@ async function loadUser(){
   showApp();
 }
 
-// Mostrar vistas
+/* -------------------- Views -------------------- */
 function showApp(){
   authView.classList.add("hidden");
   appView.classList.remove("hidden");
   topbar.classList.remove("hidden");
-  homeView.classList.remove("hidden");
-  profileView.classList.add("hidden");
-  gameView.classList.add("hidden");
+  setView("home");
 }
 function showAuth(){
   authView.classList.remove("hidden");
   appView.classList.add("hidden");
   topbar.classList.add("hidden");
 }
-
-// Dropdown
-userBtn.onclick=()=>dropdown.style.display=dropdown.style.display==="flex"?"none":"flex";
-window.onclick=(e)=>{if(!userMenu.contains(e.target))dropdown.style.display="none";};
-
-// Cerrar dropdown al hacer clic en opción
-function closeDropdown(){dropdown.style.display="none";}
-
-// Perfil
-viewProfileBtn.onclick=()=>{
-  const nick=currentUser.user_metadata?.nickname||"Usuario";
-  document.getElementById("profileAvatar").textContent=nick.charAt(0).toUpperCase();
-  document.getElementById("profileName").textContent=nick;
-  homeView.classList.add("hidden");
-  profileView.classList.remove("hidden");
-  gameView.classList.add("hidden");
-  closeDropdown();
-};
-backHomeBtn.onclick=()=>{profileView.classList.add("hidden");homeView.classList.remove("hidden");};
-
-// Logout
-logoutBtn.onclick=async()=>{await supabase.auth.signOut();showAuth();closeDropdown();};
-
-// Eliminar cuenta
-deleteBtn.onclick=async()=>{
-  if(confirm("¿Seguro que quieres eliminar tu cuenta y tus juegos?")) alert("Simulación: cuenta eliminada.");
-  closeDropdown();
-};
-
-// Navegación a juego
-document.querySelectorAll(".gameCard").forEach(card=>{
-  card.onclick=()=>{
-    const name=card.dataset.name,desc=card.dataset.desc,creator=card.dataset.creator;
-    const likes=card.dataset.likes,visits=card.dataset.visits;
-    homeView.classList.add("hidden");profileView.classList.add("hidden");
-    gameView.classList.remove("hidden");
-    gameTitle.textContent=name;
-    gameDesc.textContent=desc;
-    likeCount.textContent=likes;
-    visitCount.textContent=visits;
-    gameCreator.textContent=creator;
-    gameCreator.onclick=()=>showProfile(creator);
-  };
-});
-
-// Volver desde juego
-backHomeFromGame.onclick=()=>{gameView.classList.add("hidden");homeView.classList.remove("hidden");};
-
-// Mostrar perfil de otro
-function showProfile(name){
-  profileView.classList.remove("hidden");
-  homeView.classList.add("hidden");
-  gameView.classList.add("hidden");
-  profileName.textContent=name;
-  profileAvatar.textContent=name.charAt(0).toUpperCase();
-  closeDropdown();
+function setView(v){
+  homeView.classList.toggle("hidden", v!=="home");
+  profileView.classList.toggle("hidden", v!=="profile");
+  gameView.classList.toggle("hidden", v!=="game");
+  uploadView.classList.toggle("hidden", v!=="upload");
+  fab.classList.toggle("hidden", v==="upload" || v==="game" ? true : false);
 }
+
+/* -------------------- Dropdown -------------------- */
+userBtn.onclick=()=>{ dropdown.style.display = (dropdown.style.display==="flex")?"none":"flex"; dropdown.style.flexDirection="column"; };
+window.addEventListener("click",(e)=>{ if(!userMenu.contains(e.target)) closeDropdown(); });
+$("viewProfileBtn").onclick=()=>{ if(currentUser) openProfile(currentUser.id); closeDropdown(); };
+$("logoutBtn").onclick=async()=>{ await supabase.auth.signOut(); closeDropdown(); };
+$("deleteBtn").onclick=()=>{ alert("Eliminación de cuenta: pendiente de implementar con función segura."); closeDropdown(); };
+
+/* -------------------- Games: Load & Render -------------------- */
+async function loadGames(){
+  const {data, error}=await supabase.from("games").select("id,creator_id,title,description,code,likes,dislikes,visits,created_at").order("created_at",{ascending:false}).limit(200);
+  if(error){ console.warn("loadGames error", error); gamesGrid.innerHTML="<p class='metaMuted'>No se pudieron cargar los juegos.</p>"; return; }
+  allGames = data || [];
+  // Buscar nombres de creadores en profiles (si existe tabla)
+  const ids=[...new Set(allGames.map(g=>g.creator_id).filter(Boolean))];
+  let nameMap={};
+  if(ids.length){
+    const {data:profiles}=await supabase.from("profiles").select("id,nickname").in("id",ids);
+    if(profiles){ for(const p of profiles) nameMap[p.id]=p.nickname; }
+  }
+  for(const g of allGames){ g.creator_name = nameMap[g.creator_id] || "Usuario"; }
+  renderHome();
+}
+
+function renderHome(){
+  const q=searchInput.value.trim().toLowerCase();
+  const list = q? allGames.filter(g=>g.title.toLowerCase().includes(q)) : allGames;
+  gamesGrid.innerHTML="";
+  if(!list.length){ gamesGrid.innerHTML="<div class='metaMuted'>No se encontraron juegos.</div>"; return; }
+  for(const g of list){
+    const card=document.createElement("div"); card.className="gameCard";
+    card.innerHTML=`
+      <div class="cardTitle">${escapeHtml(g.title)}</div>
+      <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
+      <div class="metaMuted">Por ${escapeHtml(g.creator_name)} · ❤️ ${g.likes} · 👁️ ${g.visits}</div>
+    `;
+    const iframe=card.querySelector("iframe");
+    iframe.srcdoc = srcdocSafe(g.code);
+    card.onclick=()=>openGame(g.id);
+    gamesGrid.appendChild(card);
+  }
+}
+searchInput.addEventListener("input", renderHome);
+
+function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
+
+/* -------------------- Game Page -------------------- */
+async function openGame(id){
+  const g=allGames.find(x=>x.id===id);
+  if(!g) return;
+  currentGame = g;
+  setView("game");
+  gamePreview.srcdoc = srcdocSafe(g.code);
+  gameTitle.textContent=g.title;
+  gameDesc.textContent=g.description||"";
+  likeCount.textContent=g.likes||0;
+  visitCount.textContent=g.visits||0;
+  gameCreator.textContent=g.creator_name||"Usuario";
+  gameCreator.onclick=()=>openProfile(g.creator_id);
+
+  // increment visit (best effort)
+  try{
+    const { data, error } = await supabase
+      .from("games")
+      .update({ visits: (g.visits||0)+1 })
+      .eq("id", g.id)
+      .select()
+      .single();
+    if(!error && data){
+      g.visits = data.visits;
+      visitCount.textContent = g.visits;
+    }
+  }catch(e){ console.warn("visit update error", e); }
+}
+
+likeBtn.onclick=()=>vote("like");
+dislikeBtn.onclick=()=>vote("dislike");
+
+async function vote(kind){
+  if(!currentGame) return;
+  const field = (kind==="like")?"likes":"dislikes";
+  const localNew = (currentGame[field]||0)+1;
+  // optimistic UI
+  currentGame[field]=localNew;
+  if(field==="likes") likeCount.textContent=localNew;
+  try{
+    const { data, error } = await supabase
+      .from("games")
+      .update({ [field]: localNew })
+      .eq("id", currentGame.id)
+      .select()
+      .single();
+    if(error){ console.warn("vote blocked by RLS/policy", error.message); }
+  }catch(e){ console.warn("vote error", e); }
+}
+
+backHomeFromGame.onclick=()=>{ setView("home"); };
+
+/* -------------------- Profile -------------------- */
+async function openProfile(userId){
+  viewingUserId = userId;
+  setView("profile");
+  // nickname
+  let nick = "Usuario";
+  if(currentUser && currentUser.id===userId){
+    nick = currentUser.user_metadata?.nickname || currentUser.email;
+  }else{
+    // pull from profiles
+    const { data:prof } = await supabase.from("profiles").select("nickname").eq("id", userId).maybeSingle();
+    if(prof?.nickname) nick = prof.nickname;
+  }
+  profileName.textContent = nick;
+  profileAvatar.textContent = (nick[0]||"?").toUpperCase();
+
+  // games by user
+  const mine = allGames.filter(g=>g.creator_id===userId);
+  const totalLikes = mine.reduce((a,b)=>a+(b.likes||0),0);
+  const totalVisits = mine.reduce((a,b)=>a+(b.visits||0),0);
+  likesCount.textContent = totalLikes;
+  visitsCount.textContent = totalVisits;
+
+  userGamesGrid.innerHTML="";
+  if(!mine.length){
+    const txt = (currentUser && currentUser.id===userId) ? "No has subido ningún juego." : "No ha subido ningún juego.";
+    const noDiv = document.createElement("div");
+    noDiv.className="metaMuted";
+    noDiv.style.textAlign="center";
+    noDiv.style.padding="12px";
+    noDiv.textContent = txt;
+    userGamesGrid.appendChild(noDiv);
+  }else{
+    for(const g of mine){
+      const card=document.createElement("div"); card.className="gameCard";
+      card.innerHTML=`
+        <div class="cardTitle">${escapeHtml(g.title)}</div>
+        <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
+        <div class="metaMuted">❤️ ${g.likes||0} · 👁️ ${g.visits||0}</div>
+      `;
+      card.querySelector("iframe").srcdoc = srcdocSafe(g.code);
+      card.onclick=()=>openGame(g.id);
+      userGamesGrid.appendChild(card);
+    }
+  }
+}
+backHomeBtn.onclick=()=>setView("home");
+
+/* -------------------- Upload (+) -------------------- */
+fab.onclick=()=>{ openUpload(); };
+function openUpload(){
+  if(!currentUser){ alert("Inicia sesión para subir juegos."); return; }
+  setView("upload");
+  gameNameIn.value=""; gameDescIn.value=""; codeEditor.value="";
+  codePreview.srcdoc=""; updateByteCounter();
+  tabTo("edit");
+}
+cancelUploadBtn.onclick=()=>setView("home");
+tabEdit.onclick=()=>tabTo("edit");
+tabPreview.onclick=()=>tabTo("preview");
+codeEditor.addEventListener("input", ()=>{ updateByteCounter(); if(tabPreview.classList.contains("active")) refreshEditPreview(); });
+
+function tabTo(which){
+  if(which==="edit"){
+    tabEdit.classList.add("active"); tabPreview.classList.remove("active");
+    codeEditor.classList.remove("hidden"); codePreview.classList.add("hidden");
+  }else{
+    tabPreview.classList.add("active"); tabEdit.classList.remove("active");
+    codeEditor.classList.add("hidden"); codePreview.classList.remove("hidden");
+    refreshEditPreview();
+  }
+}
+
+function refreshEditPreview(){ codePreview.srcdoc = srcdocSafe(codeEditor.value); }
+function updateByteCounter(){ const n=bytesOf(codeEditor.value); byteCounter.textContent = `${n.toLocaleString()} / 1,048,576 bytes`; }
+
+submitGameBtn.onclick=async()=>{
+  if(!currentUser){ alert("Inicia sesión."); return; }
+  const title = nic(gameNameIn.value), description=nic(gameDescIn.value), code=codeEditor.value;
+  if(!title || !code){ alert("Pon al menos nombre y código."); return; }
+  const size=bytesOf(code);
+  if(size>1048576){ alert("Tu juego supera 1 MB."); return; }
+
+  // find creator nickname for UX later
+  const creator_name = currentUser.user_metadata?.nickname || currentUser.email;
+
+  try{
+    const { data, error } = await supabase.from("games").insert({
+      creator_id: currentUser.id,
+      title, description, code,
+      likes: 0, dislikes: 0, visits: 0
+    }).select().single();
+    if(error) throw error;
+
+    // inject into local cache and re-render
+    const game = { ...data, creator_name };
+    allGames.unshift(game);
+    renderHome();
+    // show game page
+    openGame(game.id);
+  }catch(e){
+    console.warn("upload error", e);
+    alert("No se pudo subir el juego. Revisa RLS/políticas.");
+  }
+};
+
+/* -------------------- Play button (placeholder) -------------------- */
+playBtn.onclick=()=>{ alert("El botón Jugar se activará cuando montemos el player dedicado."); };
+
+/* -------------------- FAB visibility -------------------- */
+function updateFab(){
+  // visible solo logueado y fuera de la vista de subida
+  fab.classList.toggle("hidden", !currentUser || !homeView || homeView.classList.contains("hidden"));
+}
+
+/* -------------------- Init -------------------- */
+function init(){
+  // start
+  supabase.auth.getSession().then(({data:{session}})=>{ if(session){ loadUser().then(loadGames); } else { showAuth(); } });
+  // re-evaluate fab on view changes
+  const obs = new MutationObserver(updateFab);
+  obs.observe(homeView,{attributes:true,attributeFilter:["class"]});
+}
+init();
 </script>
 </body>
 </html>
