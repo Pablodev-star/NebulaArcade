@@ -287,9 +287,9 @@ signupBtn.onclick=async()=>{
   }catch(e){ signupError.textContent="Error inesperado: "+e.message; signupStatus.classList.add("hidden"); }
 };
 
-/* -------- Login con reintentos + fallback a POST /auth/v1/token -------- */
-const LOGIN_MAX_ATTEMPTS = 2;         // intentos con la SDK
-const LOGIN_TIMEOUT_MS = 7000;        // timeout por intento
+/* -------- Login con reintentos + fallback con setSession robusto -------- */
+const LOGIN_MAX_ATTEMPTS = 2;
+const LOGIN_TIMEOUT_MS = 7000;
 
 async function sdkSignInWithTimeout(email, pass){
   let timer;
@@ -319,6 +319,22 @@ async function rawPasswordLogin(email, pass){
   return { res, payload };
 }
 
+async function setSessionRobust(at, rt, statusEl){
+  try{ await supabase.auth.setSession({ access_token: at, refresh_token: rt }); }catch(_){}
+  for(let i=1;i<=12;i++){
+    const sr = await supabase.auth.getSession();
+    const s = sr?.data?.session;
+    if(s?.access_token){
+      saveSession(s);
+      return true;
+    }
+    if(statusEl){ statusEl.textContent = `✅ Tokens recibidos. Abriendo sesión… (verificando ${i}/12)`; }
+    await sleep(500);
+    if(i===6){ try{ await supabase.auth.setSession({ access_token: at, refresh_token: rt }); }catch(_){ } }
+  }
+  return false;
+}
+
 loginBtn.onclick=async()=>{
   const email=nic(loginEmail.value), pass=loginPass.value;
   loginError.textContent=""; loginStatus.textContent=""; loginStatus.classList.remove("hidden");
@@ -339,7 +355,6 @@ loginBtn.onclick=async()=>{
           loginBtn.disabled=false;
           return;
         }
-        // otro error => intenta siguiente vuelta
       }else if(data?.user){
         loginStatus.textContent = "✅ Sesión iniciada. Cargando…";
         await loadUser(); showApp(); loadGames();
@@ -356,20 +371,21 @@ loginBtn.onclick=async()=>{
     await sleep(500*i);
   }
 
-  // 2) Fallback real: POST directo a /auth/v1/token
+  // 2) Fallback real: POST directo a /auth/v1/token + setSession robusto
   loginStatus.textContent = "🛠️ Intentando método alternativo…";
   try{
     const { res, payload } = await rawPasswordLogin(email, pass);
     if(res.ok && payload?.access_token && payload?.refresh_token){
       loginStatus.textContent = "✅ Tokens recibidos. Abriendo sesión…";
-      await supabase.auth.setSession({
-        access_token: payload.access_token,
-        refresh_token: payload.refresh_token
-      });
-      await loadUser(); showApp(); loadGames();
-      loginStatus.classList.add("hidden");
-      loginBtn.disabled=false;
-      return;
+      const ok = await setSessionRobust(payload.access_token, payload.refresh_token, loginStatus);
+      if(ok){
+        await loadUser(); showApp(); loadGames();
+        loginStatus.classList.add("hidden");
+        loginBtn.disabled=false;
+        return;
+      }else{
+        loginError.textContent = "No se pudo establecer la sesión tras varios intentos.";
+      }
     }else{
       const code = res.status;
       const msg  = payload?.error_description || payload?.msg || "Error en token";
@@ -387,7 +403,6 @@ loginBtn.onclick=async()=>{
     loginError.textContent = "Fallback error: "+(e.message||e);
   }
 
-  // 3) Diagnóstico extra
   await diagnoseConnectivity(loginStatus);
   loginBtn.disabled=false;
 };
