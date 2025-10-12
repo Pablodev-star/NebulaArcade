@@ -175,8 +175,7 @@ const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
 });
 
 /* -------------------- Persistencia manual extra -------------------- */
-const NA_SESSION_KEY = "na_manual_session"; // cinturón de seguridad
-
+const NA_SESSION_KEY = "na_manual_session";
 function saveSession(session){
   try{
     if(session?.access_token && session?.refresh_token){
@@ -189,7 +188,6 @@ function saveSession(session){
   }catch(_){}
 }
 function clearSavedSession(){ try{ localStorage.removeItem(NA_SESSION_KEY); }catch(_){} }
-
 async function restoreManualSessionIfNeeded(){
   const resp = await supabase.auth.getSession();
   const have = resp?.data?.session;
@@ -261,10 +259,8 @@ async function diagnoseConnectivity(labelEl){
       `REST now(): ${rest.status}`,
       `AUTH health: ${auth.status}`
     ];
-    // Heurística simple
-    if(rest.status===0 || auth.status===0){ lines.push("→ Posible bloqueo de red/extensión."); }
-    if(rest.status===403 || auth.status===403){ lines.push("→ CORS o dominio no permitido en Supabase."); }
-    if(rest.status===401 || auth.status===401){ lines.push("→ Revisa tu anon key / proyecto."); }
+    if(rest.status===403 || auth.status===403) lines.push("→ CORS o dominio no permitido.");
+    if(rest.status===401 || auth.status===401) lines.push("→ Revisa tu anon key / proyecto.");
     labelEl.textContent = lines.join("\n");
   }catch(e){
     labelEl.textContent = "Diagnóstico: no se pudo conectar (red/CORS/extensión).";
@@ -291,15 +287,13 @@ signupBtn.onclick=async()=>{
   }catch(e){ signupError.textContent="Error inesperado: "+e.message; signupStatus.classList.add("hidden"); }
 };
 
-/* -------- Login con reintentos + timeout y explicación -------- */
-const LOGIN_MAX_ATTEMPTS = 3;
-const LOGIN_TIMEOUT_MS = 8000;
+/* -------- Login con reintentos + fallback a POST /auth/v1/token -------- */
+const LOGIN_MAX_ATTEMPTS = 2;         // intentos con la SDK
+const LOGIN_TIMEOUT_MS = 7000;        // timeout por intento
 
-async function signInWithTimeout(email, pass){
+async function sdkSignInWithTimeout(email, pass){
   let timer;
-  const timeoutP = new Promise((_,rej)=>{
-    timer = setTimeout(()=>rej(new Error("TIMEOUT")), LOGIN_TIMEOUT_MS);
-  });
+  const timeoutP = new Promise((_,rej)=>{ timer=setTimeout(()=>rej(new Error("TIMEOUT")), LOGIN_TIMEOUT_MS); });
   try{
     const result = await Promise.race([
       supabase.auth.signInWithPassword({ email, password: pass }),
@@ -309,26 +303,43 @@ async function signInWithTimeout(email, pass){
   } finally { clearTimeout(timer); }
 }
 
+async function rawPasswordLogin(email, pass){
+  const url = `${SUPA_URL}/auth/v1/token?grant_type=password`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type":"application/json",
+      "apikey": SUPA_KEY,
+      "Authorization": `Bearer ${SUPA_KEY}`
+    },
+    body: JSON.stringify({ email, password: pass })
+  });
+  let payload = null;
+  try { payload = await res.json(); } catch(_){}
+  return { res, payload };
+}
+
 loginBtn.onclick=async()=>{
   const email=nic(loginEmail.value), pass=loginPass.value;
   loginError.textContent=""; loginStatus.textContent=""; loginStatus.classList.remove("hidden");
   if(!email||!pass){ loginError.textContent="Rellena ambos campos."; loginStatus.classList.add("hidden"); return;}
   loginBtn.disabled=true;
 
-  let lastErrMsg = "";
-  for(let attempt=1; attempt<=LOGIN_MAX_ATTEMPTS; attempt++){
-    loginStatus.textContent = `🔐 Verificando credenciales… (intento ${attempt}/${LOGIN_MAX_ATTEMPTS})`;
+  // 1) Reintentos con la SDK
+  let lastErr="desconocido";
+  for(let i=1;i<=LOGIN_MAX_ATTEMPTS;i++){
+    loginStatus.textContent = `🔐 Verificando credenciales… (SDK intento ${i}/${LOGIN_MAX_ATTEMPTS})`;
     try{
-      const { data, error } = await signInWithTimeout(email, pass);
+      const { data, error } = await sdkSignInWithTimeout(email, pass);
       if(error){
-        lastErrMsg = error.message || String(error);
+        lastErr = error.message || String(error);
         if(error.message?.includes("Invalid login credentials")){
           loginStatus.classList.add("hidden");
           loginError.textContent = "❌ Credenciales incorrectas.";
           loginBtn.disabled=false;
           return;
         }
-        // Otro error (p. ej. red temporal). Sigue a reintento.
+        // otro error => intenta siguiente vuelta
       }else if(data?.user){
         loginStatus.textContent = "✅ Sesión iniciada. Cargando…";
         await loadUser(); showApp(); loadGames();
@@ -336,22 +347,49 @@ loginBtn.onclick=async()=>{
         loginBtn.disabled=false;
         return;
       }else{
-        lastErrMsg = "Respuesta sin usuario.";
+        lastErr = "Respuesta sin usuario (SDK).";
       }
     }catch(e){
-      lastErrMsg = (e.message==="TIMEOUT") ? "Tiempo de espera agotado." : (e.message||"Error desconocido");
-      loginStatus.textContent = `⚠️ ${lastErrMsg} (intento ${attempt}/${LOGIN_MAX_ATTEMPTS})`;
+      lastErr = (e.message==="TIMEOUT") ? "Tiempo de espera agotado." : (e.message||"Error desconocido");
+      loginStatus.textContent = `⚠️ ${lastErr} (SDK intento ${i}/${LOGIN_MAX_ATTEMPTS})`;
     }
-    if(attempt<LOGIN_MAX_ATTEMPTS){
-      await sleep(800*attempt); // backoff suave
-    }
+    await sleep(500*i);
   }
 
-  // Si llegó aquí, los 3 intentos fallaron
-  loginBtn.disabled=false;
-  loginError.textContent = `No se pudo iniciar sesión tras ${LOGIN_MAX_ATTEMPTS} intentos.\nÚltimo error: ${lastErrMsg || "desconocido"}`;
-  loginStatus.classList.remove("hidden");
+  // 2) Fallback real: POST directo a /auth/v1/token
+  loginStatus.textContent = "🛠️ Intentando método alternativo…";
+  try{
+    const { res, payload } = await rawPasswordLogin(email, pass);
+    if(res.ok && payload?.access_token && payload?.refresh_token){
+      loginStatus.textContent = "✅ Tokens recibidos. Abriendo sesión…";
+      await supabase.auth.setSession({
+        access_token: payload.access_token,
+        refresh_token: payload.refresh_token
+      });
+      await loadUser(); showApp(); loadGames();
+      loginStatus.classList.add("hidden");
+      loginBtn.disabled=false;
+      return;
+    }else{
+      const code = res.status;
+      const msg  = payload?.error_description || payload?.msg || "Error en token";
+      if(code===400 && /email/i.test(msg) && /confirm/i.test(msg)){
+        loginError.textContent = "✉️ Tu email no está verificado. Revisa tu correo y confirma.";
+      }else if(code===400 && /invalid login credentials/i.test(msg)){
+        loginError.textContent = "❌ Credenciales incorrectas.";
+      }else if(code===403){
+        loginError.textContent = "403 (Forbidden). Puede ser CORS o configuración de Auth.";
+      }else{
+        loginError.textContent = `⚠️ Fallback falló (${code}): ${msg}`;
+      }
+    }
+  }catch(e){
+    loginError.textContent = "Fallback error: "+(e.message||e);
+  }
+
+  // 3) Diagnóstico extra
   await diagnoseConnectivity(loginStatus);
+  loginBtn.disabled=false;
 };
 
 /* -------------------- Session & persist extra -------------------- */
@@ -456,7 +494,6 @@ async function openGame(id){
   gameCreator.textContent=g.creator_name||"Usuario";
   gameCreator.onclick=()=>openProfile(g.creator_id);
 
-  // Incrementar visita (si la política lo permite)
   try{
     const { data, error } = await supabase
       .from("games")
