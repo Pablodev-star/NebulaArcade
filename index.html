@@ -46,11 +46,11 @@ main{max-width:900px;margin:30px auto;padding:0 20px;}
 .searchBox input:focus{border-color:#ffd24d;outline:none;box-shadow:0 0 0 4px #ffe08d60;}
 .gamesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
 .gameCard{border:1px solid var(--border);border-radius:14px;background:#fff;
-box-shadow:0 6px 18px rgba(0,0,0,.05);padding:12px;transition:.2s;}
+box-shadow:0 6px 18px rgba(0,0,0,.05);padding:12px;transition:.2s;cursor:pointer;}
 .gameCard:hover{transform:translateY(-3px);}
 .profileView{max-width:600px;margin:40px auto;text-align:center;}
 .profileAvatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));
-display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:36px;margin-bottom:10px;}
+display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:36px;margin:0 auto 10px;}
 .stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted);}
 .hidden{display:none;}
 .wrapAuth{max-width:400px;margin:10vh auto;padding:24px;border:1px solid var(--border);
@@ -58,13 +58,17 @@ border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.06);background:#fff;}
 input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--border);
 border-radius:12px;font-size:15px}
 input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
-.btn{width:100%;margin-top:8px;border:0;border-radius:12px;padding:12px;
+.btn{border:0;border-radius:12px;padding:12px 20px;
 font-weight:800;cursor:pointer;color:#2a2000;
 background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s}
 .btn:hover{background:linear-gradient(90deg,#ffa12b,#ffe04d);transform:translateY(-1px)}
 .error{color:#b91c1c;font-size:14px;margin-top:6px;text-align:center}
 .link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;
 text-align:center;display:block;margin-top:12px}
+.gamePage{text-align:center;max-width:700px;margin:0 auto;}
+.previewBox{width:100%;height:300px;background:#f3f3f3;border-radius:14px;
+display:flex;align-items:center;justify-content:center;font-size:60px;}
+.metaInfo{display:flex;justify-content:center;gap:20px;color:var(--muted);margin:10px 0;}
 </style>
 </head>
 <body>
@@ -83,13 +87,13 @@ text-align:center;display:block;margin-top:12px}
   </div>
 </header>
 
-<!-- LOGIN / REGISTER -->
+<!-- LOGIN / REGISTRO -->
 <div class="wrapAuth" id="authView">
   <h1 style="font-family:'Fredoka One';text-align:center;">Nebula Arcade</h1>
   <div id="loginForm">
     <input id="loginEmail" type="email" placeholder="Correo electrónico">
     <input id="loginPass" type="password" placeholder="Contraseña">
-    <button id="loginBtn" class="btn">Iniciar sesión</button>
+    <button id="loginBtn" class="btn" style="width:100%">Iniciar sesión</button>
     <div id="loginError" class="error"></div>
     <span id="showSignup" class="link">¿No tienes cuenta? Regístrate</span>
   </div>
@@ -97,22 +101,22 @@ text-align:center;display:block;margin-top:12px}
     <input id="nick" type="text" placeholder="Nombre o nickname">
     <input id="signupEmail" type="email" placeholder="Correo electrónico">
     <input id="signupPass" type="password" placeholder="Contraseña (mín. 6)">
-    <button id="signupBtn" class="btn">Registrarse</button>
+    <button id="signupBtn" class="btn" style="width:100%">Registrarse</button>
     <div id="signupError" class="error"></div>
     <span id="showLogin" class="link">¿Ya tienes cuenta? Inicia sesión</span>
   </div>
 </div>
 
-<!-- APP -->
+<!-- APP PRINCIPAL -->
 <main id="appView" class="hidden">
   <div id="homeView">
     <div class="searchBox">
       <input id="searchInput" type="text" placeholder="Buscar juegos...">
     </div>
     <div class="gamesGrid" id="gamesGrid">
-      <div class="gameCard">🎮 Ejemplo 1</div>
-      <div class="gameCard">🎮 Ejemplo 2</div>
-      <div class="gameCard">🎮 Ejemplo 3</div>
+      <div class="gameCard" data-id="1" data-name="Ejemplo 1" data-desc="Primer juego de prueba" data-creator="Pablodev" data-likes="3" data-visits="10">🎮 Ejemplo 1</div>
+      <div class="gameCard" data-id="2" data-name="Ejemplo 2" data-desc="Segundo juego de ejemplo" data-creator="Lucía" data-likes="1" data-visits="4">🎮 Ejemplo 2</div>
+      <div class="gameCard" data-id="3" data-name="Ejemplo 3" data-desc="Otro juego divertido" data-creator="Carlos" data-likes="7" data-visits="19">🎮 Ejemplo 3</div>
     </div>
   </div>
 
@@ -125,9 +129,26 @@ text-align:center;display:block;margin-top:12px}
     </div>
     <h3>Juegos subidos</h3>
     <div class="gamesGrid" id="userGamesGrid">
-      <div class="gameCard muted">No has subido ningún juego.</div>
+      <div class="gameCard muted" style="text-align:center;">No has subido ningún juego.</div>
     </div>
     <button id="backHomeBtn" class="btn" style="width:auto;margin-top:24px;">🏠 Volver al inicio</button>
+  </div>
+
+  <div id="gameView" class="hidden gamePage">
+    <div class="previewBox" id="gamePreview">🎮</div>
+    <h2 id="gameTitle" style="margin-top:10px;">Nombre del juego</h2>
+    <p id="gameDesc" style="margin:6px 0 12px;"></p>
+    <div class="metaInfo">
+      <span>❤️ <span id="likeCount">0</span></span>
+      <span>👁️ <span id="visitCount">0</span></span>
+    </div>
+    <p>Creador: <span id="gameCreator" style="color:#ff8a00;font-weight:700;cursor:pointer;">Usuario</span></p>
+    <div style="margin-top:20px;display:flex;justify-content:center;gap:12px;">
+      <button id="likeBtn" class="btn">❤️ Like</button>
+      <button id="dislikeBtn" class="btn" style="background:#ccc;color:#000;">👎 Dislike</button>
+      <button id="playBtn" class="btn">▶️ Jugar</button>
+    </div>
+    <button id="backHomeFromGame" class="btn" style="margin-top:20px;">🏠 Volver</button>
   </div>
 </main>
 
@@ -141,6 +162,7 @@ const authView=document.getElementById("authView");
 const appView=document.getElementById("appView");
 const homeView=document.getElementById("homeView");
 const profileView=document.getElementById("profileView");
+const gameView=document.getElementById("gameView");
 const userMenu=document.getElementById("userMenu");
 const userBtn=document.getElementById("userBtn");
 const dropdown=document.getElementById("dropdown");
@@ -150,6 +172,7 @@ const deleteBtn=document.getElementById("deleteBtn");
 const logoutBtn=document.getElementById("logoutBtn");
 const viewProfileBtn=document.getElementById("viewProfileBtn");
 const backHomeBtn=document.getElementById("backHomeBtn");
+const backHomeFromGame=document.getElementById("backHomeFromGame");
 
 let currentUser=null;
 
@@ -186,8 +209,7 @@ async function loadUser(){
   const nick=user.user_metadata?.nickname||user.email;
   userAvatar.textContent=nick.charAt(0).toUpperCase();
   userNameTop.textContent=nick;
-  if(nick.toLowerCase()==="pablodev") deleteBtn.style.display="block";
-  else deleteBtn.style.display="none";
+  deleteBtn.style.display=(nick.toLowerCase()==="pablodev")?"block":"none";
   showApp();
 }
 
@@ -198,6 +220,7 @@ function showApp(){
   topbar.classList.remove("hidden");
   homeView.classList.remove("hidden");
   profileView.classList.add("hidden");
+  gameView.classList.add("hidden");
 }
 function showAuth(){
   authView.classList.remove("hidden");
@@ -209,6 +232,9 @@ function showAuth(){
 userBtn.onclick=()=>dropdown.style.display=dropdown.style.display==="flex"?"none":"flex";
 window.onclick=(e)=>{if(!userMenu.contains(e.target))dropdown.style.display="none";};
 
+// Cerrar dropdown al hacer clic en opción
+function closeDropdown(){dropdown.style.display="none";}
+
 // Perfil
 viewProfileBtn.onclick=()=>{
   const nick=currentUser.user_metadata?.nickname||"Usuario";
@@ -216,24 +242,48 @@ viewProfileBtn.onclick=()=>{
   document.getElementById("profileName").textContent=nick;
   homeView.classList.add("hidden");
   profileView.classList.remove("hidden");
+  gameView.classList.add("hidden");
+  closeDropdown();
 };
-backHomeBtn.onclick=()=>{
-  profileView.classList.add("hidden");
-  homeView.classList.remove("hidden");
-};
+backHomeBtn.onclick=()=>{profileView.classList.add("hidden");homeView.classList.remove("hidden");};
 
 // Logout
-logoutBtn.onclick=async()=>{await supabase.auth.signOut();showAuth();};
+logoutBtn.onclick=async()=>{await supabase.auth.signOut();showAuth();closeDropdown();};
 
-// Eliminar cuenta (solo Pablodev)
+// Eliminar cuenta
 deleteBtn.onclick=async()=>{
-  if(confirm("¿Seguro que quieres eliminar tu cuenta y tus juegos?")){
-    alert("Simulación: cuenta eliminada.");
-  }
+  if(confirm("¿Seguro que quieres eliminar tu cuenta y tus juegos?")) alert("Simulación: cuenta eliminada.");
+  closeDropdown();
 };
 
-// Inicial
-loadUser();
+// Navegación a juego
+document.querySelectorAll(".gameCard").forEach(card=>{
+  card.onclick=()=>{
+    const name=card.dataset.name,desc=card.dataset.desc,creator=card.dataset.creator;
+    const likes=card.dataset.likes,visits=card.dataset.visits;
+    homeView.classList.add("hidden");profileView.classList.add("hidden");
+    gameView.classList.remove("hidden");
+    gameTitle.textContent=name;
+    gameDesc.textContent=desc;
+    likeCount.textContent=likes;
+    visitCount.textContent=visits;
+    gameCreator.textContent=creator;
+    gameCreator.onclick=()=>showProfile(creator);
+  };
+});
+
+// Volver desde juego
+backHomeFromGame.onclick=()=>{gameView.classList.add("hidden");homeView.classList.remove("hidden");};
+
+// Mostrar perfil de otro
+function showProfile(name){
+  profileView.classList.remove("hidden");
+  homeView.classList.add("hidden");
+  gameView.classList.add("hidden");
+  profileName.textContent=name;
+  profileAvatar.textContent=name.charAt(0).toUpperCase();
+  closeDropdown();
+}
 </script>
 </body>
 </html>
