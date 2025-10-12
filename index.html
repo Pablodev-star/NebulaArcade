@@ -48,6 +48,15 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 .previewLarge{width:100%;height:380px;border:0;border-radius:14px;background:#f3f3f3;}
 .fab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#2a2000;background:linear-gradient(135deg,var(--grad1),var(--grad2));box-shadow:0 10px 24px rgba(255,138,0,.35);cursor:pointer;z-index:25;}
 .fab:hover{transform:translateY(-2px)}
+/* Upload/editor */
+.uploader{max-width:900px;margin:0 auto;}
+.tabbar{display:flex;gap:10px;margin-top:10px}
+.tabbar button{border:1px solid var(--border);background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
+.tabbar button.active{background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;border:0}
+.editor{width:100%;height:260px;border:1px solid var(--border);border-radius:12px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:14px}
+.previewEdit{width:100%;height:260px;border:0;border-radius:12px;background:#f3f3f3}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.counter{color:var(--muted);font-size:13px;margin-left:auto}
 </style>
 </head>
 <body>
@@ -91,6 +100,8 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 
 <!-- APP -->
 <main id="appView" class="hidden">
+
+  <!-- HOME -->
   <div id="homeView">
     <div class="searchBox">
       <input id="searchInput" type="text" placeholder="Buscar juegos por nombre...">
@@ -98,6 +109,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
     <div class="gamesGrid" id="gamesGrid"></div>
   </div>
 
+  <!-- PERFIL -->
   <div id="profileView" class="hidden profileView">
     <div class="profileHeader">
       <div class="profileAvatar" id="profileAvatar">?</div>
@@ -113,49 +125,129 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
       <button id="backHomeBtn" class="btn" style="width:auto;">🏠 Volver al inicio</button>
     </div>
   </div>
+
+  <!-- GAME PAGE -->
+  <div id="gameView" class="hidden gamePage">
+    <iframe id="gamePreview" class="previewLarge" sandbox="allow-scripts"></iframe>
+    <div class="gameHeader" style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+      <h2 id="gameTitle">Nombre del juego</h2>
+      <p id="gameDesc" class="metaMuted"></p>
+      <div class="metaMuted">❤️ <span id="likeCount">0</span> · 👁️ <span id="visitCount">0</span></div>
+      <p>Creador: <span id="gameCreator" style="color:#ff8a00;font-weight:700;cursor:pointer;">Usuario</span></p>
+      <div class="gameActions" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+        <button id="likeBtn" class="btn" style="padding:10px 16px">Like</button>
+        <button id="dislikeBtn" class="btn" style="padding:10px 16px">Dislike</button>
+        <button id="playBtn" class="btn" style="padding:14px 28px;font-weight:900">Jugar</button>
+      </div>
+      <div style="margin-top:16px"><button id="backHomeFromGame" class="btn">🏠 Volver</button></div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="uploadView" class="hidden uploader">
+    <h2 style="text-align:center;margin-bottom:6px;">Subir nuevo juego</h2>
+    <div class="row"><input id="gameNameIn" type="text" placeholder="Nombre del juego" style="flex:1"></div>
+    <div class="row"><input id="gameDescIn" type="text" placeholder="Descripción corta" style="flex:1"></div>
+    <div class="tabbar">
+      <button id="tabEdit" class="active">Editor</button>
+      <button id="tabPreview">Preview</button>
+      <span class="counter" id="byteCounter">0 / 1,048,576 bytes</span>
+    </div>
+    <textarea id="codeEditor" class="editor" placeholder="Pega o escribe tu HTML + CSS + JS aquí (todo en uno)"></textarea>
+    <iframe id="codePreview" class="previewEdit hidden" sandbox="allow-scripts"></iframe>
+    <div class="row" style="margin-top:12px;justify-content:center;">
+      <button id="submitGameBtn" class="btn">Subir juego</button>
+      <button id="cancelUploadBtn" class="btn" style="background:#eee;color:#222;">Cancelar</button>
+    </div>
+  </div>
+
 </main>
 
 <!-- FAB -->
 <button id="fab" class="fab hidden" title="Subir juego">+</button>
 
 <script>
+/* -------------------- Supabase -------------------- */
 const SUPA_URL="https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
 const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
-const $=id=>document.getElementById(id);
-const loginForm=$("loginForm"),signupForm=$("signupForm"),authView=$("authView"),appView=$("appView"),topbar=$("topbar");
-const loginEmail=$("loginEmail"),loginPass=$("loginPass"),loginBtn=$("loginBtn"),loginError=$("loginError"),loginStatus=$("loginStatus");
-const signupBtn=$("signupBtn"),signupError=$("signupError"),signupStatus=$("signupStatus"),nick=$("nick"),signupEmail=$("signupEmail"),signupPass=$("signupPass");
-const showSignup=$("showSignup"),showLogin=$("showLogin");
+/* -------------------- AUTH TOKEN BOOTSTRAP -------------------- */
+/* Aplica tokens que llegan en ?query o #hash y limpia la URL (para magic link) */
+(async function applyAuthFromUrl(){
+  const usp = new URLSearchParams(location.search);
+  const hash = location.hash.startsWith('#') ? location.hash.slice(1) : '';
+  const hsp = new URLSearchParams(hash);
+  const access_token  = usp.get('access_token')  || hsp.get('access_token');
+  const refresh_token = usp.get('refresh_token') || hsp.get('refresh_token');
+  if(access_token && refresh_token){
+    try{ await supabase.auth.setSession({ access_token, refresh_token }); }
+    catch(e){ console.warn("setSession failed:", e); }
+    history.replaceState({}, document.title, location.origin + location.pathname);
+  }
+})();
 
+/* -------------------- DOM refs & State -------------------- */
+const $=id=>document.getElementById(id);
+const topbar=$("topbar"), authView=$("authView"), appView=$("appView");
+const homeView=$("homeView"), profileView=$("profileView"), gameView=$("gameView"), uploadView=$("uploadView");
+const userMenu=$("userMenu"), userBtn=$("userBtn"), dropdown=$("dropdown");
+const userAvatar=$("userAvatar"), userNameTop=$("userNameTop"), deleteBtn=$("deleteBtn");
+const logoutBtn=$("logoutBtn"), viewProfileBtn=$("viewProfileBtn"), backHomeBtn=$("backHomeBtn");
+const gamesGrid=$("gamesGrid"), userGamesGrid=$("userGamesGrid"), searchInput=$("searchInput");
+const fab=$("fab");
+const gamePreview=$("gamePreview"), gameTitle=$("gameTitle"), gameDesc=$("gameDesc"), likeCount=$("likeCount"), visitCount=$("visitCount"), gameCreator=$("gameCreator");
+const likeBtn=$("likeBtn"), dislikeBtn=$("dislikeBtn"), playBtn=$("playBtn"), backHomeFromGame=$("backHomeFromGame");
+const profileAvatar=$("profileAvatar"), profileName=$("profileName"), likesCount=$("likesCount"), visitsCount=$("visitsCount");
+const gameNameIn=$("gameNameIn"), gameDescIn=$("gameDescIn"), codeEditor=$("codeEditor"), codePreview=$("codePreview");
+const tabEdit=$("tabEdit"), tabPreview=$("tabPreview"), byteCounter=$("byteCounter");
+const loginForm=$("loginForm"), signupForm=$("signupForm"), showSignup=$("showSignup"), showLogin=$("showLogin");
+const loginEmail=$("loginEmail"), loginPass=$("loginPass"), loginBtn=$("loginBtn"), loginError=$("loginError"), loginStatus=$("loginStatus");
+const signupBtn=$("signupBtn"), signupError=$("signupError"), signupStatus=$("signupStatus"), nick=$("nick"), signupEmail=$("signupEmail"), signupPass=$("signupPass");
+const cancelUploadBtn=$("cancelUploadBtn"), submitGameBtn=$("submitGameBtn");
+
+let currentUser=null;
+let allGames=[];
+let currentGame=null;
+let viewingUserId=null;
+
+/* -------------------- Utils -------------------- */
+function closeDropdown(){ dropdown.style.display="none"; }
+function bytesOf(str){ return new Blob([str||""]).size; }
+function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</body></html>"; }
+function nic(s){ return (s||"").trim(); }
+function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
+
+/* -------------------- Auth UI (con loaders/mensajes) -------------------- */
 showSignup.onclick=()=>{loginForm.classList.add("hidden");signupForm.classList.remove("hidden");};
 showLogin.onclick=()=>{signupForm.classList.add("hidden");loginForm.classList.remove("hidden");};
 
-// --- Registro con loader y mensajes detallados ---
 signupBtn.onclick=async()=>{
-  const nickname=nick.value.trim(), email=signupEmail.value.trim(), pass=signupPass.value;
-  signupError.textContent=""; signupStatus.textContent=""; signupStatus.classList.remove("hidden");
+  const nickname=nic(nick.value), email=nic(signupEmail.value), pass=signupPass.value;
+  signupError.textContent=""; signupError.style.color="#b91c1c";
+  signupStatus.textContent=""; signupStatus.classList.remove("hidden");
   if(!nickname||!email||!pass){ signupError.textContent="Completa todos los campos."; signupStatus.classList.add("hidden"); return;}
   if(pass.length<6){ signupError.textContent="La contraseña debe tener al menos 6 caracteres."; signupStatus.classList.add("hidden"); return;}
   signupStatus.innerHTML='<span class="loader"></span>Creando cuenta...';
   try{
     const {data,error}=await supabase.auth.signUp({email,password:pass,options:{data:{nickname}}});
+    console.log("Signup response:", data, error);
     signupStatus.classList.add("hidden");
     if(error){ signupError.textContent="Error: "+error.message; return;}
-    if(data?.user?.identities?.length===0){ signupError.textContent="El correo ya está registrado."; return;}
-    signupError.style.color="#22c55e"; signupError.textContent="✅ Cuenta creada correctamente.";
+    // Siempre pide verificación (como pediste)
+    signupError.style.color="#2563eb";
+    signupError.textContent="📧 Te enviamos un email de verificación. Abre el enlace para entrar (revisa SPAM si no lo ves).";
   }catch(e){ signupError.textContent="Error inesperado: "+e.message; signupStatus.classList.add("hidden"); }
 };
 
-// --- Login con loader y mensajes detallados ---
 loginBtn.onclick=async()=>{
-  const email=loginEmail.value.trim(), pass=loginPass.value;
+  const email=nic(loginEmail.value), pass=loginPass.value;
   loginError.textContent=""; loginStatus.textContent=""; loginStatus.classList.remove("hidden");
   if(!email||!pass){ loginError.textContent="Rellena ambos campos."; loginStatus.classList.add("hidden"); return;}
   loginStatus.innerHTML='<span class="loader"></span>Verificando credenciales...';
   try{
     const {data,error}=await supabase.auth.signInWithPassword({email,password:pass});
+    console.log("Login response:", data, error);
     loginStatus.classList.add("hidden");
     if(error){
       if(error.message.includes("Invalid login credentials")) loginError.textContent="❌ Credenciales incorrectas.";
@@ -167,21 +259,231 @@ loginBtn.onclick=async()=>{
   }catch(e){ loginError.textContent="Error inesperado: "+e.message; loginStatus.classList.add("hidden"); }
 };
 
+/* -------------------- Session -------------------- */
 supabase.auth.onAuthStateChange(async (_e,session)=>{
+  console.log("Auth state:", _e, session);
   if(session){ await loadUser(); await loadGames(); } else { showAuth(); }
 });
-
 async function loadUser(){
   const {data:{user}}=await supabase.auth.getUser();
   if(!user){ showAuth(); return;}
   currentUser=user;
-  $("userAvatar").textContent=(user.user_metadata?.nickname||user.email)[0].toUpperCase();
-  $("userNameTop").textContent=user.user_metadata?.nickname||user.email;
+  const nickn=user.user_metadata?.nickname||user.email;
+  userAvatar.textContent=nickn.charAt(0).toUpperCase();
+  userNameTop.textContent=nickn;
+  deleteBtn.style.display=(nickn.toLowerCase()==="pablodev")?"block":"none";
   showApp();
 }
 
+/* -------------------- Views helpers -------------------- */
 function showAuth(){authView.classList.remove("hidden");appView.classList.add("hidden");topbar.classList.add("hidden");}
-function showApp(){authView.classList.add("hidden");appView.classList.remove("hidden");topbar.classList.remove("hidden");}
+function showApp(){authView.classList.add("hidden");appView.classList.remove("hidden");topbar.classList.remove("hidden"); setView("home");}
+function setView(v){
+  homeView.classList.toggle("hidden", v!=="home");
+  profileView.classList.toggle("hidden", v!=="profile");
+  gameView.classList.toggle("hidden", v!=="game");
+  uploadView.classList.toggle("hidden", v!=="upload");
+  updateFab();
+}
+
+/* -------------------- Dropdown -------------------- */
+userBtn.onclick=()=>{ dropdown.style.display = (dropdown.style.display==="flex")?"none":"flex"; dropdown.style.flexDirection="column"; };
+window.addEventListener("click",(e)=>{ if(!userMenu.contains(e.target)) closeDropdown(); });
+$("viewProfileBtn").onclick=()=>{ if(currentUser) openProfile(currentUser.id); closeDropdown(); };
+$("logoutBtn").onclick=async()=>{ await supabase.auth.signOut(); closeDropdown(); };
+$("deleteBtn").onclick=async()=>{
+  if(!currentUser) return;
+  if(!confirm("¿Seguro que quieres ELIMINAR tu cuenta y todos tus juegos?")) return;
+  try{
+    await supabase.from("games").delete().eq("creator_id", currentUser.id);
+    await supabase.from("profiles").delete().eq("id", currentUser.id);
+    await supabase.auth.signOut();
+    alert("Cuenta eliminada (datos de juegos y perfil).");
+  }catch(e){ alert("No se pudo eliminar todo. Revisa políticas RLS."); }
+  closeDropdown();
+};
+
+/* -------------------- Games: Load & Render -------------------- */
+async function loadGames(){
+  const {data, error}=await supabase
+    .from("games")
+    .select("id,creator_id,title,description,code,likes,dislikes,visits,created_at")
+    .order("created_at",{ascending:false})
+    .limit(200);
+  if(error){ console.warn("loadGames error", error); gamesGrid.innerHTML="<p class='metaMuted'>No se pudieron cargar los juegos.</p>"; return; }
+  allGames = data || [];
+  // nombres de creador desde profiles
+  const ids=[...new Set(allGames.map(g=>g.creator_id).filter(Boolean))];
+  let nameMap={};
+  if(ids.length){
+    const {data:profiles}=await supabase.from("profiles").select("id,nickname").in("id",ids);
+    if(profiles){ for(const p of profiles) nameMap[p.id]=p.nickname; }
+  }
+  for(const g of allGames){ g.creator_name = nameMap[g.creator_id] || "Usuario"; }
+  renderHome();
+}
+function renderHome(){
+  const q=searchInput.value.trim().toLowerCase();
+  const list = q? allGames.filter(g=> (g.title||"").toLowerCase().includes(q)) : allGames;
+  gamesGrid.innerHTML="";
+  if(!list.length){ gamesGrid.innerHTML="<div class='metaMuted'>No se encontraron juegos.</div>"; return; }
+  for(const g of list){
+    const card=document.createElement("div"); card.className="gameCard";
+    card.innerHTML=`
+      <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
+      <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
+      <div class="metaMuted">Por ${escapeHtml(g.creator_name)} · ❤️ ${g.likes||0} · 👁️ ${g.visits||0}</div>
+    `;
+    const iframe=card.querySelector("iframe");
+    iframe.srcdoc = srcdocSafe(g.code);
+    card.onclick=()=>openGame(g.id);
+    gamesGrid.appendChild(card);
+  }
+}
+searchInput.addEventListener("input", renderHome);
+
+/* -------------------- Game Page -------------------- */
+async function openGame(id){
+  const g=allGames.find(x=>x.id===id);
+  if(!g) return;
+  currentGame = g;
+  setView("game");
+  gamePreview.srcdoc = srcdocSafe(g.code);
+  gameTitle.textContent=g.title||"Sin título";
+  gameDesc.textContent=g.description||"";
+  likeCount.textContent=g.likes||0;
+  visitCount.textContent=g.visits||0;
+  gameCreator.textContent=g.creator_name||"Usuario";
+  gameCreator.onclick=()=>openProfile(g.creator_id);
+
+  // Incrementar visita (si la política lo permite)
+  try{
+    const { data, error } = await supabase
+      .from("games")
+      .update({ visits: (g.visits||0)+1 })
+      .eq("id", g.id)
+      .select()
+      .single();
+    if(!error && data){ g.visits = data.visits; visitCount.textContent = g.visits; }
+  }catch(e){ console.warn("visit update error", e); }
+}
+likeBtn.onclick=()=>vote("likes");
+dislikeBtn.onclick=()=>vote("dislikes");
+async function vote(field){
+  if(!currentGame) return;
+  const localNew = (currentGame[field]||0)+1;
+  currentGame[field]=localNew;
+  if(field==="likes") likeCount.textContent=localNew;
+  try{
+    await supabase.from("games").update({ [field]: localNew }).eq("id", currentGame.id);
+  }catch(e){ console.warn("vote error", e); }
+}
+backHomeFromGame.onclick=()=>{ setView("home"); };
+
+/* -------------------- Profile -------------------- */
+async function openProfile(userId){
+  viewingUserId = userId;
+  setView("profile");
+  // nickname
+  let nick = "Usuario";
+  if(currentUser && currentUser.id===userId){
+    nick = currentUser.user_metadata?.nickname || currentUser.email;
+  }else{
+    const { data:prof } = await supabase.from("profiles").select("nickname").eq("id", userId).maybeSingle();
+    if(prof?.nickname) nick = prof.nickname;
+  }
+  profileName.textContent = nick;
+  profileAvatar.textContent = (nick[0]||"?").toUpperCase();
+
+  const mine = allGames.filter(g=>g.creator_id===userId);
+  const totalLikes = mine.reduce((a,b)=>a+(b.likes||0),0);
+  const totalVisits = mine.reduce((a,b)=>a+(b.visits||0),0);
+  likesCount.textContent = totalLikes;
+  visitsCount.textContent = totalVisits;
+
+  userGamesGrid.innerHTML="";
+  if(!mine.length){
+    const txt = (currentUser && currentUser.id===userId) ? "No has subido ningún juego." : "No ha subido ningún juego.";
+    const noDiv = document.createElement("div");
+    noDiv.className="metaMuted"; noDiv.style.textAlign="center"; noDiv.style.padding="12px";
+    noDiv.textContent = txt;
+    userGamesGrid.appendChild(noDiv);
+  }else{
+    for(const g of mine){
+      const card=document.createElement("div"); card.className="gameCard";
+      card.innerHTML=`
+        <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
+        <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
+        <div class="metaMuted">❤️ ${g.likes||0} · 👁️ ${g.visits||0}</div>
+      `;
+      card.querySelector("iframe").srcdoc = srcdocSafe(g.code);
+      card.onclick=()=>openGame(g.id);
+      userGamesGrid.appendChild(card);
+    }
+  }
+}
+backHomeBtn.onclick=()=>setView("home");
+
+/* -------------------- Upload (+) -------------------- */
+const MAX_BYTES=1048576;
+fab.onclick=()=>{ openUpload(); };
+function openUpload(){
+  if(!currentUser){ alert("Inicia sesión para subir juegos."); return; }
+  setView("upload");
+  gameNameIn.value=""; gameDescIn.value=""; codeEditor.value="";
+  codePreview.srcdoc=""; updateByteCounter();
+  tabTo("edit");
+}
+cancelUploadBtn.onclick=()=>setView("home");
+tabEdit.onclick=()=>tabTo("edit");
+tabPreview.onclick=()=>tabTo("preview");
+codeEditor.addEventListener("input", ()=>{ updateByteCounter(); if(tabPreview.classList.contains("active")) refreshEditPreview(); });
+function tabTo(which){
+  if(which==="edit"){
+    tabEdit.classList.add("active"); tabPreview.classList.remove("active");
+    codeEditor.classList.remove("hidden"); codePreview.classList.add("hidden");
+  }else{
+    tabPreview.classList.add("active"); tabEdit.classList.remove("active");
+    codeEditor.classList.add("hidden"); codePreview.classList.remove("hidden");
+    refreshEditPreview();
+  }
+}
+function refreshEditPreview(){ codePreview.srcdoc = srcdocSafe(codeEditor.value); }
+function updateByteCounter(){ const n=bytesOf(codeEditor.value); byteCounter.textContent = `${n.toLocaleString()} / ${MAX_BYTES.toLocaleString()} bytes`; }
+
+submitGameBtn.onclick=async()=>{
+  if(!currentUser){ alert("Inicia sesión."); return; }
+  const title = nic(gameNameIn.value), description=nic(gameDescIn.value), code=codeEditor.value;
+  if(!title || !code){ alert("Pon al menos nombre y código."); return; }
+  const size=bytesOf(code);
+  if(size>MAX_BYTES){ alert("Tu juego supera 1 MB."); return; }
+  const creator_name = currentUser.user_metadata?.nickname || currentUser.email;
+  try{
+    const { data, error } = await supabase.from("games").insert({
+      creator_id: currentUser.id, title, description, code, likes: 0, dislikes: 0, visits: 0
+    }).select().single();
+    if(error) throw error;
+    const game = { ...data, creator_name };
+    allGames.unshift(game);
+    renderHome();
+    openGame(game.id);
+  }catch(e){
+    console.warn("upload error", e);
+    alert("No se pudo subir el juego. Revisa RLS/políticas de la tabla.");
+  }
+};
+
+/* -------------------- FAB visibility -------------------- */
+function updateFab(){ fab.classList.toggle("hidden", !currentUser || !homeView || homeView.classList.contains("hidden")); }
+
+/* -------------------- Init -------------------- */
+(function init(){
+  supabase.auth.getSession().then(({data:{session}})=>{ if(session){ loadUser().then(loadGames); } else { showAuth(); } });
+  const obs = new MutationObserver(updateFab);
+  obs.observe(homeView,{attributes:true,attributeFilter:["class"]});
+  // cerrar menú al pulsar opción
+  ["viewProfileBtn","logoutBtn","deleteBtn"].forEach(id=>{ const el=$(id); if(el) el.addEventListener("click", ()=>closeDropdown()); });
+})();
 </script>
 </body>
 </html>
