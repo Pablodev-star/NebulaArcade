@@ -56,7 +56,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 .btn:hover{background:linear-gradient(90deg,#ffa12b,#ffe04d);transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn--danger{background:linear-gradient(90deg,#ff6961,#ffd200)}
-.error{color:var(--warn);font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
+.error{color:#b91c1c;font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
 .status{color:#2563eb;font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
 .loader{display:inline-block;width:16px;height:16px;border:3px solid #ffd24d;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
 .link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;text-align:center;display:block;margin-top:12px}
@@ -153,6 +153,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
       <button class="chipBtn" id="fPopular" type="button" data-filter="popular">Populares</button>
       <button class="chipBtn" id="fNew" type="button" data-filter="new">Nuevos</button>
       <button class="chipBtn" id="fClassic" type="button" data-filter="classic">Clásicos</button>
+      <button class="chipBtn" id="fNebula" type="button" data-filter="nebula">De Nebula Glow</button>
     </div>
 
     <div class="gamesGrid" id="gamesGrid"></div>
@@ -184,7 +185,9 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
     <div class="gameHeader">
       <h2 id="gameTitle">Nombre del juego</h2>
       <p id="gameDesc" class="metaMuted"></p>
-      <div class="metaMuted">❤️ <span id="likeCount">0</span> · 👁️ <span id="visitCount">0</span></div>
+      <div class="metaMuted">
+        ❤️ <span id="likeCount">0</span> · 👁️ <span id="visitCount">0</span> · 📅 Publicado: <span id="publishedOn">—</span>
+      </div>
       <p>Creador: <span id="gameCreator" style="color:#ff8a00;font-weight:700;cursor:pointer;">Usuario</span></p>
       <div class="gameActions">
         <button id="likeBtn" class="btn toggleBtn" type="button">Like</button>
@@ -229,6 +232,10 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 /* ========= Config & Auth (REST) ========= */
 const SUPA_URL="https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
+
+/* Filtro Nebula Glow */
+const NEBULA_EMAIL_LOWER = "pablomassofia@gmail.com";   // filtro real (no se muestra)
+const NEBULA_NICK_LOWER  = "pablodev";                  // fallback si no existe columna email
 
 const SESSION_KEY="na_session_v1";
 let session=null;
@@ -305,7 +312,7 @@ const logoutBtn=$("logoutBtn"), viewProfileBtn=$("viewProfileBtn"), backHomeBtn=
 const gamesGrid=$("gamesGrid"), userGamesGrid=$("userGamesGrid"), searchInput=$("searchInput");
 const loadMoreWrap=$("loadMoreWrap"), loadMoreBtn=$("loadMoreBtn");
 const fab=$("fab");
-const gamePreview=$("gamePreview"), gameTitle=$("gameTitle"), gameDesc=$("gameDesc"), likeCount=$("likeCount"), visitCount=$("visitCount"), gameCreator=$("gameCreator");
+const gamePreview=$("gamePreview"), gameTitle=$("gameTitle"), gameDesc=$("gameDesc"), likeCount=$("likeCount"), visitCount=$("visitCount"), gameCreator=$("gameCreator"), publishedOn=$("publishedOn");
 const likeBtn=$("likeBtn"), dislikeBtn=$("dislikeBtn"), playBtn=$("playBtn"), backHomeFromGame=$("backHomeFromGame"), deleteGameBtn=$("deleteGameBtn");
 const profileAvatar=$("profileAvatar"), profileName=$("profileName"), likesCount=$("likesCount"), visitsCount=$("visitsCount");
 const gameNameIn=$("gameNameIn"), gameDescIn=$("gameDescIn"), codeEditor=$("codeEditor"), codePreview=$("codePreview");
@@ -315,7 +322,7 @@ const loginEmail=$("loginEmail"), loginPass=$("loginPass"), loginBtn=$("loginBtn
 const signupBtn=$("signupBtn"), signupError=$("signupError"), signupStatus=$("signupStatus"), nick=$("nick"), signupEmail=$("signupEmail"), signupPass=$("signupPass");
 const cancelUploadBtn=$("cancelUploadBtn"), submitGameBtn=$("submitGameBtn");
 const playerFS=$("playerFS"), fsFrame=$("fsFrame"), fsClose=$("fsClose");
-const fPopular=$("fPopular"), fNew=$("fNew"), fClassic=$("fClassic");
+const fPopular=$("fPopular"), fNew=$("fNew"), fClassic=$("fClassic"), fNebula=$("fNebula");
 
 /* ========= Estado ========= */
 let currentUser=null;
@@ -324,10 +331,11 @@ let currentGame=null;
 let viewingUserId=null;
 let currentVote=null;
 
-let activeFilter=null; // null | 'popular' | 'new' | 'classic'
+let activeFilter=null; // null | 'popular' | 'new' | 'classic' | 'nebula'
 const PAGE_SIZE=50;
-let pageIndex=0; // cuántos items ya renderizados tras filtrar+ordenar
+let pageIndex=0;
 let currentList=[];
+let nebulaIds = new Set(); // perfiles cuyo email == NEBULA_EMAIL_LOWER
 
 /* ========= Utils ========= */
 function closeDropdown(){ dropdown.style.display="none"; }
@@ -336,6 +344,7 @@ function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</bod
 function nic(s){ return (s||"").trim(); }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
 function isAdmin(){ return (currentUser?.email||"").toLowerCase()==="pablomassofia@gmail.com"; }
+function formatDate(d){ try{ return new Date(d).toLocaleDateString('es-ES'); }catch{ return '—'; } }
 
 /* ========= Auth UI ========= */
 showSignup.onclick=()=>{loginForm.classList.add("hidden");signupForm.classList.remove("hidden");};
@@ -435,19 +444,46 @@ async function diagnose(label){
 
 /* ========= Games ========= */
 async function loadGames(){
-  // Trae hasta 500 para trabajar filtros/puntuaciones en cliente
   const params = { select:"id,creator_id,title,description,code,likes,dislikes,visits,created_at", order:"created_at.desc", limit:500 };
   const data = await rest("GET","/rest/v1/games",{ query:params });
   allGames = data || [];
+
+  // Mapa de nombres + pre-resolver IDs de Nebula por email (o por nickname si no hay email)
   const ids=[...new Set(allGames.map(g=>g.creator_id).filter(Boolean))];
   let nameMap={};
   if(ids.length){
     const list = `(${ids.map(x=>`"${x}"`).join(",")})`;
-    const profs = await rest("GET","/rest/v1/profiles",{ query:{ select:"id,nickname", id:`in.${list}` } });
-    (profs||[]).forEach(p=>{ nameMap[p.id]=p.nickname; });
+    // intentar traer email; si no existe la columna, hacemos fallback sin email
+    let profs=null;
+    try{
+      profs = await rest("GET","/rest/v1/profiles",{ query:{ select:"id,nickname,email", id:`in.${list}` } });
+    }catch{
+      profs = await rest("GET","/rest/v1/profiles",{ query:{ select:"id,nickname", id:`in.${list}` } });
+    }
+    (profs||[]).forEach(p=>{
+      nameMap[p.id]=p.nickname || "Usuario";
+    });
   }
   allGames.forEach(g=> g.creator_name = nameMap[g.creator_id] || "Usuario");
+
+  // Resolver IDs de Nebula por email directo; si falla, por nickname
+  await determineNebulaIds();
+
   applyFiltersAndRender(true);
+}
+
+async function determineNebulaIds(){
+  nebulaIds = new Set();
+  try{
+    const rows = await rest("GET","/rest/v1/profiles",{ query:{ select:"id", email:`eq.${NEBULA_EMAIL_LOWER}` } });
+    (rows||[]).forEach(r=>nebulaIds.add(r.id));
+  }catch{
+    // fallback por nickname si la columna email no existe
+    try{
+      const rows2 = await rest("GET","/rest/v1/profiles",{ query:{ select:"id", nickname:`eq.${NEBULA_NICK_LOWER}` } });
+      (rows2||[]).forEach(r=>nebulaIds.add(r.id));
+    }catch{}
+  }
 }
 
 /* --- Filtros & orden --- */
@@ -456,16 +492,16 @@ function computeSortedList(){
   let list = q? allGames.filter(g=> ((g.title||"").toLowerCase().includes(q))) : [...allGames];
 
   if(activeFilter==="popular"){
-    // puntuación = likes + 0.25*visits
     list.forEach(g=> g.__score = (g.likes||0) + 0.25*(g.visits||0));
     list.sort((a,b)=> (b.__score - a.__score) || ((b.likes||0)-(a.likes||0)) || ((b.visits||0)-(a.visits||0)) || (new Date(b.created_at)-new Date(a.created_at)) );
   }else if(activeFilter==="new"){
     list.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
   }else if(activeFilter==="classic"){
     list.sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
-  }else{
-    // por defecto: como vinieron (ya venían desc por created_at)
-    // nada
+  }else if(activeFilter==="nebula"){
+    list = list.filter(g=> nebulaIds.has(g.creator_id));
+    list.forEach(g=> g.__score = (g.likes||0) + 0.25*(g.visits||0));
+    list.sort((a,b)=> (b.__score - a.__score) || ((b.likes||0)-(a.likes||0)) || ((b.visits||0)-(a.visits||0)) || (new Date(b.created_at)-new Date(a.created_at)) );
   }
   return list;
 }
@@ -493,15 +529,15 @@ searchInput.addEventListener("input", ()=>applyFiltersAndRender(true));
 loadMoreBtn.addEventListener("click", ()=>applyFiltersAndRender(false));
 
 // Toggle exclusivo de filtros
-[fPopular,fNew,fClassic].forEach(btn=>{
+[fPopular,fNew,fClassic,fNebula].forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const f = btn.dataset.filter;
     if(activeFilter===f){
       activeFilter=null; // desactivar
-      [fPopular,fNew,fClassic].forEach(b=>b.classList.remove("active"));
+      [fPopular,fNew,fClassic,fNebula].forEach(b=>b.classList.remove("active"));
     }else{
       activeFilter=f;
-      [fPopular,fNew,fClassic].forEach(b=>b.classList.toggle("active", b.dataset.filter===f));
+      [fPopular,fNew,fClassic,fNebula].forEach(b=>b.classList.toggle("active", b.dataset.filter===f));
     }
     applyFiltersAndRender(true);
   });
@@ -516,20 +552,19 @@ async function openGame(id){
   gameTitle.textContent=g.title||"Sin título";
   gameDesc.textContent=g.description||"";
   likeCount.textContent=g.likes||0; visitCount.textContent=g.visits||0;
+  publishedOn.textContent = formatDate(g.created_at);
   gameCreator.textContent=g.creator_name||"Usuario";
   gameCreator.onclick=()=>openProfile(g.creator_id);
 
-  // Mostrar botón borrar si creador o admin
   const canDelete = currentUser && (currentUser.id===g.creator_id || isAdmin());
   deleteGameBtn.classList.toggle("hidden", !canDelete);
 
-  // Cargar mi voto (si estoy logueado)
   if(currentUser){
     try{
       const rows = await rest("GET","/rest/v1/votes",{ query:{ select:"id,type", user_id:`eq.${currentUser.id}`, game_id:`eq.${g.id}` }});
       currentVote = rows?.[0] || null;
       syncVoteButtons();
-    }catch(_){ /* ignorar */ }
+    }catch(_){ /* ignore */ }
   }else{
     currentVote=null; syncVoteButtons();
   }
@@ -548,7 +583,6 @@ async function handleVote(type){
 
   try{
     if(prev===type){
-      // Quitar voto
       if(currentVote?.id){
         await rest("DELETE","/rest/v1/votes",{ query:{ id:`eq.${currentVote.id}` }});
       }
@@ -561,7 +595,6 @@ async function handleVote(type){
         await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ dislikes:g.dislikes } });
       }
     }else if(prev===null){
-      // Insert nuevo voto
       const ins = await rest("POST","/rest/v1/votes",{ body:{ user_id:currentUser.id, game_id:g.id, type }});
       currentVote = ins?.[0] || null;
       if(type==="like"){
@@ -572,7 +605,6 @@ async function handleVote(type){
         await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ dislikes:g.dislikes } });
       }
     }else{
-      // Cambiar voto
       if(currentVote?.id){
         const upd = await rest("PATCH","/rest/v1/votes",{ query:{ id:`eq.${currentVote.id}` }, body:{ type }});
         currentVote = upd?.[0] || null;
@@ -605,7 +637,6 @@ playBtn.onclick = async () => {
   playerFS.style.display="block";
   fsFrame.srcdoc = srcdocSafe(currentGame.code);
 
-  // contar visita (solo al jugar)
   try{
     const updated = await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${currentGame.id}` }, body:{ visits:(currentGame.visits||0)+1 } });
     if(updated?.[0]){ currentGame.visits=updated[0].visits; visitCount.textContent=currentGame.visits; }
