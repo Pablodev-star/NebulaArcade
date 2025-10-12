@@ -3,30 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Redirecting...</title>
+<title>Redirecting to Nebula Arcade...</title>
+<style>
+body {
+  background:#fff7e6;
+  font-family: 'Inter', system-ui, sans-serif;
+  color:#1b1f24;
+  text-align:center;
+  padding-top:80px;
+}
+h2 { font-family:'Fredoka One', cursive; font-size:26px; margin-bottom:12px; }
+</style>
 <script>
 (async ()=>{
   try {
-    // Read fragment parameters (like #access_token=... from Supabase)
+    // Supabase sends auth info as hash (#access_token=...)
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
 
-    // Convert to query string form
+    // Convert hash params to normal query params
     const query = new URLSearchParams();
-    for (const [key, value] of params.entries()) {
-      query.set(key, value);
-    }
+    for (const [key, value] of params.entries()) query.set(key, value);
 
-    // Redirect to your real Nebula Arcade page with tokens preserved
+    // Redirect to the real app preserving tokens
     const target = "https://pablodev-star.github.io/NebulaArcade/?" + query.toString();
     window.location.replace(target);
-  } catch (err) {
-    document.body.innerHTML = "<h3>⚠️ Redirect failed.</h3><p>"+err+"</p>";
+  } catch(err) {
+    document.body.innerHTML =
+      "<h3>⚠️ Redirect failed</h3><p>"+err.message+"</p>";
   }
 })();
 </script>
 </head>
 <body>
-<p>Redirecting to Nebula Arcade...</p>
+  <h2>Nebula Arcade</h2>
+  <p>Verifying your account and redirecting...</p>
 </body>
 </html>
