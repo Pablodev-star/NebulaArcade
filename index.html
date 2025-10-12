@@ -12,7 +12,7 @@
   --grad1:#ff8a00;--grad2:#ffd200;--grad1h:#ffa12b;--grad2h:#ffe04d;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text)}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:.3s}
 .wrap{max-width:420px;margin:8vh auto;padding:24px;border:1px solid var(--border);
   border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.06);background:#fff}
 h1{font-family:"Fredoka One";text-align:center}
@@ -29,10 +29,17 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
   text-align:center;display:block;margin-top:12px}
 .hidden{display:none}
 .center{text-align:center;margin-top:16px}
+#profileCard{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px}
+.avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));
+display:flex;align-items:center;justify-content:center;font-family:"Fredoka One";font-size:36px;color:#2a2000;margin-bottom:12px;}
+.gamesList{margin-top:16px;width:100%;padding:12px;border:1px dashed var(--border);
+border-radius:12px;color:var(--muted);font-size:15px;}
+.fadeIn{animation:fadeIn .4s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap fadeIn">
   <h1>Nebula Arcade</h1>
 
   <!-- FORMULARIO LOGIN -->
@@ -57,7 +64,19 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
   <!-- PANTALLA BIENVENIDA -->
   <div id="welcome" class="hidden center">
     <h2 id="welcomeMsg">Bienvenido :)</h2>
-    <button id="logoutBtn" class="btn" style="width:auto">Cerrar sesión</button>
+    <button id="profileBtn" class="btn" style="width:auto;margin-top:10px;">Ver mi perfil</button>
+    <button id="logoutBtn" class="btn" style="width:auto;margin-top:10px;">Cerrar sesión</button>
+  </div>
+
+  <!-- PERFIL -->
+  <div id="profile" class="hidden center">
+    <div id="profileCard">
+      <div id="avatar" class="avatar">?</div>
+      <h2 id="profileName">Tu nick</h2>
+      <div class="gamesList" id="gamesList">Aún no has subido ningún juego.</div>
+    </div>
+    <button id="backBtn" class="btn" style="width:auto;margin-top:10px;">Volver</button>
+    <button id="logoutBtn2" class="btn" style="width:auto;margin-top:10px;">Cerrar sesión</button>
   </div>
 </div>
 
@@ -69,6 +88,7 @@ const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 const loginForm = document.getElementById("loginForm");
 const signupForm = document.getElementById("signupForm");
 const welcome = document.getElementById("welcome");
+const profile = document.getElementById("profile");
 const welcomeMsg = document.getElementById("welcomeMsg");
 
 // Cambiar entre login y registro
@@ -116,15 +136,211 @@ async function showWelcome(){
   welcomeMsg.textContent = `Bienvenido, ${nick}!`;
   loginForm.classList.add("hidden");
   signupForm.classList.add("hidden");
+  profile.classList.add("hidden");
   welcome.classList.remove("hidden");
 }
 
-// Logout
-document.getElementById("logoutBtn").onclick = async ()=>{
+// Ver perfil
+document.getElementById("profileBtn").onclick = async ()=>{
+  const { data: { user } } = await supabase.auth.getUser();
+  if(!user) return;
+  const nick = user.user_metadata?.nickname || "Sin nombre";
+  document.getElementById("profileName").textContent = nick;
+  document.getElementById("avatar").textContent = nick.charAt(0).toUpperCase();
+  welcome.classList.add("hidden");
+  profile.classList.remove("hidden");
+};
+
+// Volver
+document.getElementById("backBtn").onclick = ()=>{
+  profile.classList.add("hidden");
+  welcome.classList.remove("hidden");
+};
+
+// Logout (desde ambas pantallas)
+async function logoutAll(){
   await supabase.auth.signOut();
+  profile.classList.add("hidden");
   welcome.classList.add("hidden");
   loginForm.classList.remove("hidden");
+}
+document.getElementById("logoutBtn").onclick = logoutAll;
+document.getElementById("logoutBtn2").onclick = logoutAll;
+
+// Mantener sesión
+supabase.auth.onAuthStateChange((_event, session)=>{
+  if(session) showWelcome();
+});
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nebula Arcade — Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#fff;--text:#1b1f24;--muted:#6b7280;--border:#e5e7eb;
+  --grad1:#ff8a00;--grad2:#ffd200;--grad1h:#ffa12b;--grad2h:#ffe04d;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:.3s}
+.wrap{max-width:420px;margin:8vh auto;padding:24px;border:1px solid var(--border);
+  border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.06);background:#fff}
+h1{font-family:"Fredoka One";text-align:center}
+input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--border);
+  border-radius:12px;font-size:15px}
+input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
+.btn{width:100%;margin-top:8px;border:0;border-radius:12px;padding:12px;
+  font-weight:800;cursor:pointer;color:#2a2000;
+  background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s}
+.btn:hover{background:linear-gradient(90deg,var(--grad1h),var(--grad2h));
+  transform:translateY(-1px)}
+.error{color:#b91c1c;font-size:14px;margin-top:6px;text-align:center}
+.link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;
+  text-align:center;display:block;margin-top:12px}
+.hidden{display:none}
+.center{text-align:center;margin-top:16px}
+#profileCard{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px}
+.avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));
+display:flex;align-items:center;justify-content:center;font-family:"Fredoka One";font-size:36px;color:#2a2000;margin-bottom:12px;}
+.gamesList{margin-top:16px;width:100%;padding:12px;border:1px dashed var(--border);
+border-radius:12px;color:var(--muted);font-size:15px;}
+.fadeIn{animation:fadeIn .4s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap fadeIn">
+  <h1>Nebula Arcade</h1>
+
+  <!-- FORMULARIO LOGIN -->
+  <div id="loginForm">
+    <input id="loginEmail" type="email" placeholder="Correo electrónico">
+    <input id="loginPass" type="password" placeholder="Contraseña">
+    <button id="loginBtn" class="btn">Iniciar sesión</button>
+    <div id="loginError" class="error"></div>
+    <span id="showSignup" class="link">¿No tienes cuenta? Regístrate</span>
+  </div>
+
+  <!-- FORMULARIO REGISTRO -->
+  <div id="signupForm" class="hidden">
+    <input id="nick" type="text" placeholder="Nombre o nickname">
+    <input id="signupEmail" type="email" placeholder="Correo electrónico">
+    <input id="signupPass" type="password" placeholder="Contraseña (mín. 6)">
+    <button id="signupBtn" class="btn">Registrarse</button>
+    <div id="signupError" class="error"></div>
+    <span id="showLogin" class="link">¿Ya tienes cuenta? Inicia sesión</span>
+  </div>
+
+  <!-- PANTALLA BIENVENIDA -->
+  <div id="welcome" class="hidden center">
+    <h2 id="welcomeMsg">Bienvenido :)</h2>
+    <button id="profileBtn" class="btn" style="width:auto;margin-top:10px;">Ver mi perfil</button>
+    <button id="logoutBtn" class="btn" style="width:auto;margin-top:10px;">Cerrar sesión</button>
+  </div>
+
+  <!-- PERFIL -->
+  <div id="profile" class="hidden center">
+    <div id="profileCard">
+      <div id="avatar" class="avatar">?</div>
+      <h2 id="profileName">Tu nick</h2>
+      <div class="gamesList" id="gamesList">Aún no has subido ningún juego.</div>
+    </div>
+    <button id="backBtn" class="btn" style="width:auto;margin-top:10px;">Volver</button>
+    <button id="logoutBtn2" class="btn" style="width:auto;margin-top:10px;">Cerrar sesión</button>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = "https://arypwvzmjedlhsrzrgxw.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
+const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
+const welcome = document.getElementById("welcome");
+const profile = document.getElementById("profile");
+const welcomeMsg = document.getElementById("welcomeMsg");
+
+// Cambiar entre login y registro
+document.getElementById("showSignup").onclick = ()=>{
+  loginForm.classList.add("hidden");
+  signupForm.classList.remove("hidden");
 };
+document.getElementById("showLogin").onclick = ()=>{
+  signupForm.classList.add("hidden");
+  loginForm.classList.remove("hidden");
+};
+
+// Registro
+document.getElementById("signupBtn").onclick = async ()=>{
+  const nickname = document.getElementById("nick").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const pass  = document.getElementById("signupPass").value;
+  const err = document.getElementById("signupError");
+  err.textContent = "";
+  if(!nickname || !email || !pass){ err.textContent="Completa todos los campos."; return; }
+
+  const { error } = await supabase.auth.signUp({
+    email, password: pass, options:{ data:{ nickname } }
+  });
+  if(error){ err.textContent = error.message; return; }
+  err.textContent = "Cuenta creada. Revisa tu correo si se requiere verificación.";
+};
+
+// Login
+document.getElementById("loginBtn").onclick = async ()=>{
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass  = document.getElementById("loginPass").value;
+  const err = document.getElementById("loginError");
+  err.textContent="";
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if(error){ err.textContent=error.message; return; }
+  showWelcome();
+};
+
+// Mostrar bienvenida
+async function showWelcome(){
+  const { data: { user } } = await supabase.auth.getUser();
+  if(!user) return;
+  const nick = user.user_metadata?.nickname || user.email;
+  welcomeMsg.textContent = `Bienvenido, ${nick}!`;
+  loginForm.classList.add("hidden");
+  signupForm.classList.add("hidden");
+  profile.classList.add("hidden");
+  welcome.classList.remove("hidden");
+}
+
+// Ver perfil
+document.getElementById("profileBtn").onclick = async ()=>{
+  const { data: { user } } = await supabase.auth.getUser();
+  if(!user) return;
+  const nick = user.user_metadata?.nickname || "Sin nombre";
+  document.getElementById("profileName").textContent = nick;
+  document.getElementById("avatar").textContent = nick.charAt(0).toUpperCase();
+  welcome.classList.add("hidden");
+  profile.classList.remove("hidden");
+};
+
+// Volver
+document.getElementById("backBtn").onclick = ()=>{
+  profile.classList.add("hidden");
+  welcome.classList.remove("hidden");
+};
+
+// Logout (desde ambas pantallas)
+async function logoutAll(){
+  await supabase.auth.signOut();
+  profile.classList.add("hidden");
+  welcome.classList.add("hidden");
+  loginForm.classList.remove("hidden");
+}
+document.getElementById("logoutBtn").onclick = logoutAll;
+document.getElementById("logoutBtn2").onclick = logoutAll;
 
 // Mantener sesión
 supabase.auth.onAuthStateChange((_event, session)=>{
