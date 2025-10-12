@@ -3,174 +3,200 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nebula Arcade — Acceso</title>
+<title>Nebula Arcade</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
-  --bg:#fff;--text:#1b1f24;--muted:#6b7280;--border:#e5e7eb;
-  --grad1:#ff8a00;--grad2:#ffd200;--grad1h:#ffa12b;--grad2h:#ffe04d;
+  --grad1:#ff8a00;--grad2:#ffd200;--text:#1b1f24;--border:#e5e7eb;
+  --muted:#6b7280;--bg:#fff;--gold:#caa400;
 }
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:.3s}
-.wrap{max-width:420px;margin:8vh auto;padding:24px;border:1px solid var(--border);
-  border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.06);background:#fff}
-h1{font-family:"Fredoka One";text-align:center}
-input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--border);
-  border-radius:12px;font-size:15px}
-input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
-.btn{width:100%;margin-top:8px;border:0;border-radius:12px;padding:12px;
-  font-weight:800;cursor:pointer;color:#2a2000;
-  background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s}
-.btn:hover{background:linear-gradient(90deg,var(--grad1h),var(--grad2h));
-  transform:translateY(-1px)}
-.error{color:#b91c1c;font-size:14px;margin-top:6px;text-align:center}
-.link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;
-  text-align:center;display:block;margin-top:12px}
-.hidden{display:none}
-.center{text-align:center;margin-top:16px}
-#profileCard{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px}
-.avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));
-display:flex;align-items:center;justify-content:center;font-family:"Fredoka One";font-size:36px;color:#2a2000;margin-bottom:12px;}
-.gamesList{margin-top:16px;width:100%;padding:12px;border:1px dashed var(--border);
-border-radius:12px;color:var(--muted);font-size:15px;}
-.fadeIn{animation:fadeIn .4s ease both}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;border-bottom:1px solid var(--border);
+  background:#fff;position:sticky;top:0;z-index:10;
+}
+.logo{font-family:"Fredoka One";font-size:22px;
+background:linear-gradient(90deg,var(--grad1),var(--grad2));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.userMenu{position:relative;}
+.userBtn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;
+background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;font-weight:700;
+cursor:pointer;transition:.2s;}
+.userBtn:hover{filter:brightness(1.05);}
+.avatar{width:28px;height:28px;border-radius:50%;background:#fff;color:#2a2000;
+display:flex;align-items:center;justify-content:center;font-family:"Fredoka One";}
+.dropdown{
+  position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--border);
+  border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.1);
+  display:none;flex-direction:column;min-width:160px;overflow:hidden;
+}
+.dropdown button{
+  background:none;border:0;text-align:left;padding:10px 16px;cursor:pointer;
+  font-weight:600;color:var(--text);transition:.15s;
+}
+.dropdown button:hover{background:#f9f9f9;}
+main{max-width:900px;margin:30px auto;padding:0 20px;}
+.searchBox{margin-bottom:20px;display:flex;gap:10px;}
+.searchBox input{
+  flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:15px;
+}
+.searchBox input:focus{border-color:#ffd24d;outline:none;box-shadow:0 0 0 4px #ffe08d60;}
+.gamesGrid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:16px;
+}
+.gameCard{
+  border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff;
+  box-shadow:0 6px 18px rgba(0,0,0,.05);padding:12px;transition:.2s;
+}
+.gameCard:hover{transform:translateY(-3px);}
+.profileView{max-width:600px;margin:40px auto;text-align:center;}
+.profileHeader{display:flex;flex-direction:column;align-items:center;margin-bottom:20px;}
+.profileAvatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));
+display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:36px;margin-bottom:10px;}
+.stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted);}
+.hidden{display:none;}
+button{cursor:pointer;}
 </style>
 </head>
 <body>
-<div class="wrap fadeIn">
-  <h1>Nebula Arcade</h1>
-
-  <!-- FORMULARIO LOGIN -->
-  <div id="loginForm">
-    <input id="loginEmail" type="email" placeholder="Correo electrónico">
-    <input id="loginPass" type="password" placeholder="Contraseña">
-    <button id="loginBtn" class="btn">Iniciar sesión</button>
-    <div id="loginError" class="error"></div>
-    <span id="showSignup" class="link">¿No tienes cuenta? Regístrate</span>
-  </div>
-
-  <!-- FORMULARIO REGISTRO -->
-  <div id="signupForm" class="hidden">
-    <input id="nick" type="text" placeholder="Nombre o nickname">
-    <input id="signupEmail" type="email" placeholder="Correo electrónico">
-    <input id="signupPass" type="password" placeholder="Contraseña (mín. 6)">
-    <button id="signupBtn" class="btn">Registrarse</button>
-    <div id="signupError" class="error"></div>
-    <span id="showLogin" class="link">¿Ya tienes cuenta? Inicia sesión</span>
-  </div>
-
-  <!-- PANTALLA BIENVENIDA -->
-  <div id="welcome" class="hidden center">
-    <h2 id="welcomeMsg">Bienvenido :)</h2>
-    <button id="profileBtn" class="btn" style="width:auto;margin-top:10px;">Ver mi perfil</button>
-    <button id="logoutBtn" class="btn" style="width:auto;margin-top:10px;">Cerrar sesión</button>
-  </div>
-
-  <!-- PERFIL -->
-  <div id="profile" class="hidden center">
-    <div id="profileCard">
-      <div id="avatar" class="avatar">?</div>
-      <h2 id="profileName">Tu nick</h2>
-      <div class="gamesList" id="gamesList">Aún no has subido ningún juego.</div>
+<header>
+  <div class="logo">Nebula Arcade</div>
+  <div class="userMenu hidden" id="userMenu">
+    <div class="userBtn" id="userBtn">
+      <div class="avatar" id="userAvatar">?</div>
+      <span id="userNameTop">Cuenta</span>
     </div>
-    <button id="backBtn" class="btn" style="width:auto;margin-top:10px;">Volver</button>
-    <button id="logoutBtn2" class="btn" style="width:auto;margin-top:10px;">Cerrar sesión</button>
+    <div class="dropdown" id="dropdown">
+      <button id="viewProfileBtn">👤 Ver perfil</button>
+      <button id="logoutBtn">🚪 Cerrar sesión</button>
+      <button id="deleteBtn" style="color:#b91c1c;display:none;">🗑️ Eliminar cuenta</button>
+    </div>
   </div>
-</div>
+</header>
+
+<main id="mainContent">
+  <!-- Home (buscador + lista de juegos) -->
+  <div id="homeView">
+    <div class="searchBox">
+      <input id="searchInput" type="text" placeholder="Buscar juegos...">
+    </div>
+    <div class="gamesGrid" id="gamesGrid">
+      <div class="gameCard">🎮 Ejemplo 1</div>
+      <div class="gameCard">🎮 Ejemplo 2</div>
+      <div class="gameCard">🎮 Ejemplo 3</div>
+    </div>
+  </div>
+
+  <!-- Perfil -->
+  <div id="profileView" class="hidden">
+    <div class="profileHeader">
+      <div class="profileAvatar" id="profileAvatar">?</div>
+      <h2 id="profileName">Usuario</h2>
+      <div class="stats">
+        <div>❤️ <span id="likesCount">0</span> Likes</div>
+        <div>👁️ <span id="visitsCount">0</span> Visitas</div>
+      </div>
+    </div>
+    <h3>Juegos subidos</h3>
+    <div class="gamesGrid" id="userGamesGrid">
+      <div class="gameCard muted">No has subido ningún juego.</div>
+    </div>
+    <div id="profileButtons" style="margin-top:24px;">
+      <button id="backHomeBtn" class="btn">🏠 Volver al inicio</button>
+    </div>
+  </div>
+</main>
 
 <script>
 const SUPA_URL = "https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
 const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
-const welcome = document.getElementById("welcome");
-const profile = document.getElementById("profile");
-const welcomeMsg = document.getElementById("welcomeMsg");
+// DOM
+const userMenu=document.getElementById("userMenu");
+const userBtn=document.getElementById("userBtn");
+const dropdown=document.getElementById("dropdown");
+const logoutBtn=document.getElementById("logoutBtn");
+const deleteBtn=document.getElementById("deleteBtn");
+const viewProfileBtn=document.getElementById("viewProfileBtn");
+const userAvatar=document.getElementById("userAvatar");
+const userNameTop=document.getElementById("userNameTop");
+const profileView=document.getElementById("profileView");
+const homeView=document.getElementById("homeView");
+const backHomeBtn=document.getElementById("backHomeBtn");
 
-// Cambiar entre login y registro
-document.getElementById("showSignup").onclick = ()=>{
-  loginForm.classList.add("hidden");
-  signupForm.classList.remove("hidden");
-};
-document.getElementById("showLogin").onclick = ()=>{
-  signupForm.classList.add("hidden");
-  loginForm.classList.remove("hidden");
-};
+// estado
+let currentUser=null;
 
-// Registro
-document.getElementById("signupBtn").onclick = async ()=>{
-  const nickname = document.getElementById("nick").value.trim();
-  const email = document.getElementById("signupEmail").value.trim();
-  const pass  = document.getElementById("signupPass").value;
-  const err = document.getElementById("signupError");
-  err.textContent = "";
-  if(!nickname || !email || !pass){ err.textContent="Completa todos los campos."; return; }
+// menú desplegable
+userBtn.onclick=()=>dropdown.style.display=dropdown.style.display==="flex"?"none":"flex";
+window.onclick=(e)=>{if(!userMenu.contains(e.target)) dropdown.style.display="none";};
 
-  const { error } = await supabase.auth.signUp({
-    email, password: pass, options:{ data:{ nickname } }
-  });
-  if(error){ err.textContent = error.message; return; }
-  err.textContent = "Cuenta creada. Revisa tu correo si se requiere verificación.";
-};
-
-// Login
-document.getElementById("loginBtn").onclick = async ()=>{
-  const email = document.getElementById("loginEmail").value.trim();
-  const pass  = document.getElementById("loginPass").value;
-  const err = document.getElementById("loginError");
-  err.textContent="";
-  const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-  if(error){ err.textContent=error.message; return; }
-  showWelcome();
-};
-
-// Mostrar bienvenida
-async function showWelcome(){
-  const { data: { user } } = await supabase.auth.getUser();
-  if(!user) return;
-  const nick = user.user_metadata?.nickname || user.email;
-  welcomeMsg.textContent = `Bienvenido, ${nick}!`;
-  loginForm.classList.add("hidden");
-  signupForm.classList.add("hidden");
-  profile.classList.add("hidden");
-  welcome.classList.remove("hidden");
-}
-
-// Ver perfil
-document.getElementById("profileBtn").onclick = async ()=>{
-  const { data: { user } } = await supabase.auth.getUser();
-  if(!user) return;
-  const nick = user.user_metadata?.nickname || "Sin nombre";
-  document.getElementById("profileName").textContent = nick;
-  document.getElementById("avatar").textContent = nick.charAt(0).toUpperCase();
-  welcome.classList.add("hidden");
-  profile.classList.remove("hidden");
-};
-
-// Volver
-document.getElementById("backBtn").onclick = ()=>{
-  profile.classList.add("hidden");
-  welcome.classList.remove("hidden");
-};
-
-// Logout (desde ambas pantallas)
-async function logoutAll(){
-  await supabase.auth.signOut();
-  profile.classList.add("hidden");
-  welcome.classList.add("hidden");
-  loginForm.classList.remove("hidden");
-}
-document.getElementById("logoutBtn").onclick = logoutAll;
-document.getElementById("logoutBtn2").onclick = logoutAll;
-
-// Mantener sesión
+// login auto si hay sesión
 supabase.auth.onAuthStateChange((_event, session)=>{
-  if(session) showWelcome();
+  if(session) loadUser();
 });
+
+// cargar usuario
+async function loadUser(){
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user){userMenu.classList.add("hidden");return;}
+  currentUser=user;
+  const nick=user.user_metadata?.nickname||user.email;
+  userNameTop.textContent=nick;
+  userAvatar.textContent=nick.charAt(0).toUpperCase();
+  userMenu.classList.remove("hidden");
+  if(nick.toLowerCase()==="pablodev") deleteBtn.style.display="block";
+  else deleteBtn.style.display="none";
+}
+
+// ver perfil propio
+viewProfileBtn.onclick=()=>{
+  showProfile(currentUser);
+};
+
+// volver a inicio
+backHomeBtn.onclick=()=>{
+  homeView.classList.remove("hidden");
+  profileView.classList.add("hidden");
+};
+
+// mostrar perfil
+async function showProfile(user){
+  if(!user) return;
+  homeView.classList.add("hidden");
+  profileView.classList.remove("hidden");
+  const nick=user.user_metadata?.nickname||"Sin nombre";
+  document.getElementById("profileName").textContent=nick;
+  document.getElementById("profileAvatar").textContent=nick.charAt(0).toUpperCase();
+  document.getElementById("likesCount").textContent=0;
+  document.getElementById("visitsCount").textContent=0;
+  // TODO: cargar juegos reales
+}
+
+// logout
+logoutBtn.onclick=async()=>{
+  await supabase.auth.signOut();
+  currentUser=null;
+  userMenu.classList.add("hidden");
+  profileView.classList.add("hidden");
+  homeView.classList.remove("hidden");
+};
+
+// eliminar cuenta (solo Pablodev)
+deleteBtn.onclick=async()=>{
+  if(!currentUser) return;
+  if(!confirm("¿Seguro que quieres eliminar esta cuenta y sus juegos?")) return;
+  alert("Eliminando cuenta... (simulado)");
+  // TODO: borrar usuario y juegos de la DB
+};
+
+// inicialización
+loadUser();
 </script>
 </body>
 </html>
