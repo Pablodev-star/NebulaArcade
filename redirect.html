@@ -1,1 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redirecting...</title>
+<script>
+(async ()=>{
+  try {
+    // Read fragment parameters (like #access_token=... from Supabase)
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
 
+    // Convert to query string form
+    const query = new URLSearchParams();
+    for (const [key, value] of params.entries()) {
+      query.set(key, value);
+    }
+
+    // Redirect to your real Nebula Arcade page with tokens preserved
+    const target = "https://pablodev-star.github.io/NebulaArcade/?" + query.toString();
+    window.location.replace(target);
+  } catch (err) {
+    document.body.innerHTML = "<h3>⚠️ Redirect failed.</h3><p>"+err+"</p>";
+  }
+})();
+</script>
+</head>
+<body>
+<p>Redirecting to Nebula Arcade...</p>
+</body>
+</html>
