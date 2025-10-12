@@ -69,9 +69,9 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
       <span id="userNameTop">Cuenta</span>
     </div>
     <div class="dropdown" id="dropdown">
-      <button id="viewProfileBtn">👤 Ver perfil</button>
-      <button id="logoutBtn">🚪 Cerrar sesión</button>
-      <button id="deleteBtn" style="color:#b91c1c;display:none;">🗑️ Eliminar cuenta</button>
+      <button id="viewProfileBtn" type="button">👤 Ver perfil</button>
+      <button id="logoutBtn" type="button">🚪 Cerrar sesión</button>
+      <button id="deleteBtn" type="button" style="color:#b91c1c;display:none;">🗑️ Eliminar cuenta</button>
     </div>
   </div>
 </header>
@@ -82,7 +82,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
   <div id="loginForm">
     <input id="loginEmail" type="email" placeholder="Correo electrónico">
     <input id="loginPass" type="password" placeholder="Contraseña">
-    <button id="loginBtn" class="btn" style="width:100%">Iniciar sesión</button>
+    <button id="loginBtn" class="btn" style="width:100%" type="button">Iniciar sesión</button>
     <div id="loginStatus" class="status hidden"></div>
     <div id="loginError" class="error"></div>
     <span id="showSignup" class="link">¿No tienes cuenta? Regístrate</span>
@@ -91,7 +91,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
     <input id="nick" type="text" placeholder="Nombre o nickname">
     <input id="signupEmail" type="email" placeholder="Correo electrónico">
     <input id="signupPass" type="password" placeholder="Contraseña (mín. 6)">
-    <button id="signupBtn" class="btn" style="width:100%">Registrarse</button>
+    <button id="signupBtn" class="btn" style="width:100%" type="button">Registrarse</button>
     <div id="signupStatus" class="status hidden"></div>
     <div id="signupError" class="error"></div>
     <span id="showLogin" class="link">¿Ya tienes cuenta? Inicia sesión</span>
@@ -122,7 +122,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
     <h3 style="text-align:center;margin-bottom:8px;">Juegos subidos</h3>
     <div class="gamesGrid" id="userGamesGrid"></div>
     <div style="text-align:center;margin-top:16px;">
-      <button id="backHomeBtn" class="btn" style="width:auto;">🏠 Volver al inicio</button>
+      <button id="backHomeBtn" class="btn" style="width:auto;" type="button">🏠 Volver al inicio</button>
     </div>
   </div>
 
@@ -135,11 +135,11 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
       <div class="metaMuted">❤️ <span id="likeCount">0</span> · 👁️ <span id="visitCount">0</span></div>
       <p>Creador: <span id="gameCreator" style="color:#ff8a00;font-weight:700;cursor:pointer;">Usuario</span></p>
       <div class="gameActions" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
-        <button id="likeBtn" class="btn" style="padding:10px 16px">Like</button>
-        <button id="dislikeBtn" class="btn" style="padding:10px 16px">Dislike</button>
-        <button id="playBtn" class="btn" style="padding:14px 28px;font-weight:900">Jugar</button>
+        <button id="likeBtn" class="btn" style="padding:10px 16px" type="button">Like</button>
+        <button id="dislikeBtn" class="btn" style="padding:10px 16px" type="button">Dislike</button>
+        <button id="playBtn" class="btn" style="padding:14px 28px;font-weight:900" type="button">Jugar</button>
       </div>
-      <div style="margin-top:16px"><button id="backHomeFromGame" class="btn">🏠 Volver</button></div>
+      <div style="margin-top:16px"><button id="backHomeFromGame" class="btn" type="button">🏠 Volver</button></div>
     </div>
   </div>
 
@@ -149,22 +149,22 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
     <div class="row"><input id="gameNameIn" type="text" placeholder="Nombre del juego" style="flex:1"></div>
     <div class="row"><input id="gameDescIn" type="text" placeholder="Descripción corta" style="flex:1"></div>
     <div class="tabbar">
-      <button id="tabEdit" class="active">Editor</button>
-      <button id="tabPreview">Preview</button>
+      <button id="tabEdit" class="active" type="button">Editor</button>
+      <button id="tabPreview" type="button">Preview</button>
       <span class="counter" id="byteCounter">0 / 1,048,576 bytes</span>
     </div>
     <textarea id="codeEditor" class="editor" placeholder="Pega o escribe tu HTML + CSS + JS aquí (todo en uno)"></textarea>
     <iframe id="codePreview" class="previewEdit hidden" sandbox="allow-scripts"></iframe>
     <div class="row" style="margin-top:12px;justify-content:center;">
-      <button id="submitGameBtn" class="btn">Subir juego</button>
-      <button id="cancelUploadBtn" class="btn" style="background:#eee;color:#222;">Cancelar</button>
+      <button id="submitGameBtn" class="btn" type="button">Subir juego</button>
+      <button id="cancelUploadBtn" class="btn" style="background:#eee;color:#222;" type="button">Cancelar</button>
     </div>
   </div>
 
 </main>
 
 <!-- FAB -->
-<button id="fab" class="fab hidden" title="Subir juego">+</button>
+<button id="fab" class="fab hidden" title="Subir juego" type="button">+</button>
 
 <script>
 /* -------------------- Supabase -------------------- */
@@ -172,18 +172,17 @@ const SUPA_URL="https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
 const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
-/* -------------------- AUTH TOKEN BOOTSTRAP -------------------- */
-/* Aplica tokens que llegan en ?query o #hash y limpia la URL (para magic link) */
+/* -------------------- AUTH TOKEN BOOTSTRAP (magic link) -------------------- */
 (async function applyAuthFromUrl(){
-  const usp = new URLSearchParams(location.search);
-  const hash = location.hash.startsWith('#') ? location.hash.slice(1) : '';
-  const hsp = new URLSearchParams(hash);
-  const access_token  = usp.get('access_token')  || hsp.get('access_token');
-  const refresh_token = usp.get('refresh_token') || hsp.get('refresh_token');
-  if(access_token && refresh_token){
-    try{ await supabase.auth.setSession({ access_token, refresh_token }); }
-    catch(e){ console.warn("setSession failed:", e); }
-    history.replaceState({}, document.title, location.origin + location.pathname);
+  const usp=new URLSearchParams(location.search);
+  const hash=location.hash.startsWith('#')?location.hash.slice(1):'';
+  const hsp=new URLSearchParams(hash);
+  const access_token=usp.get('access_token')||hsp.get('access_token');
+  const refresh_token=usp.get('refresh_token')||hsp.get('refresh_token');
+  if(access_token&&refresh_token){
+    try{ await supabase.auth.setSession({access_token,refresh_token}); }
+    catch(e){ console.warn("setSession failed:",e); }
+    history.replaceState({},document.title,location.origin+location.pathname);
   }
 })();
 
@@ -218,7 +217,7 @@ function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</bod
 function nic(s){ return (s||"").trim(); }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
 
-/* -------------------- Auth UI (con loaders/mensajes) -------------------- */
+/* -------------------- Auth UI (loaders + tiempo de espera) -------------------- */
 showSignup.onclick=()=>{loginForm.classList.add("hidden");signupForm.classList.remove("hidden");};
 showLogin.onclick=()=>{signupForm.classList.add("hidden");loginForm.classList.remove("hidden");};
 
@@ -228,35 +227,56 @@ signupBtn.onclick=async()=>{
   signupStatus.textContent=""; signupStatus.classList.remove("hidden");
   if(!nickname||!email||!pass){ signupError.textContent="Completa todos los campos."; signupStatus.classList.add("hidden"); return;}
   if(pass.length<6){ signupError.textContent="La contraseña debe tener al menos 6 caracteres."; signupStatus.classList.add("hidden"); return;}
+
+  // deshabilitar
+  signupBtn.disabled=true; signupEmail.disabled=true; signupPass.disabled=true; nick.disabled=true;
   signupStatus.innerHTML='<span class="loader"></span>Creando cuenta...';
+
+  const doSignup = supabase.auth.signUp({email,password:pass,options:{data:{nickname}}});
+  const timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error("Timeout de red (12s). Revisa CORS/Internet).")),12000));
+
   try{
-    const {data,error}=await supabase.auth.signUp({email,password:pass,options:{data:{nickname}}});
+    const {data,error} = await Promise.race([doSignup, timeout]);
     console.log("Signup response:", data, error);
-    signupStatus.classList.add("hidden");
     if(error){ signupError.textContent="Error: "+error.message; return;}
-    // Siempre pide verificación (como pediste)
     signupError.style.color="#2563eb";
-    signupError.textContent="📧 Te enviamos un email de verificación. Abre el enlace para entrar (revisa SPAM si no lo ves).";
-  }catch(e){ signupError.textContent="Error inesperado: "+e.message; signupStatus.classList.add("hidden"); }
+    signupError.textContent="📧 Te enviamos un email de verificación. Abre el enlace para entrar (revisa SPAM).";
+  }catch(e){
+    signupError.textContent="No se pudo contactar con el servidor: "+e.message;
+  }finally{
+    signupStatus.classList.add("hidden");
+    signupBtn.disabled=false; signupEmail.disabled=false; signupPass.disabled=false; nick.disabled=false;
+  }
 };
 
 loginBtn.onclick=async()=>{
   const email=nic(loginEmail.value), pass=loginPass.value;
   loginError.textContent=""; loginStatus.textContent=""; loginStatus.classList.remove("hidden");
   if(!email||!pass){ loginError.textContent="Rellena ambos campos."; loginStatus.classList.add("hidden"); return;}
+
+  // deshabilitar
+  loginBtn.disabled=true; loginEmail.disabled=true; loginPass.disabled=true;
   loginStatus.innerHTML='<span class="loader"></span>Verificando credenciales...';
+
+  const doLogin = supabase.auth.signInWithPassword({email,password:pass});
+  const timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error("Timeout de red (12s). Revisa CORS/Internet).")),12000));
+
   try{
-    const {data,error}=await supabase.auth.signInWithPassword({email,password:pass});
+    const {data,error} = await Promise.race([doLogin, timeout]);
     console.log("Login response:", data, error);
-    loginStatus.classList.add("hidden");
     if(error){
-      if(error.message.includes("Invalid login credentials")) loginError.textContent="❌ Credenciales incorrectas.";
+      if((error.message||"").includes("Invalid login credentials")) loginError.textContent="❌ Credenciales incorrectas.";
       else loginError.textContent="⚠️ "+error.message;
       return;
     }
     if(!data?.user){ loginError.textContent="⚠️ No se recibió usuario en la respuesta."; return;}
     await loadUser(); await loadGames();
-  }catch(e){ loginError.textContent="Error inesperado: "+e.message; loginStatus.classList.add("hidden"); }
+  }catch(e){
+    loginError.textContent="No se pudo contactar con el servidor: "+e.message;
+  }finally{
+    loginStatus.classList.add("hidden");
+    loginBtn.disabled=false; loginEmail.disabled=false; loginPass.disabled=false;
+  }
 };
 
 /* -------------------- Session -------------------- */
@@ -269,7 +289,7 @@ async function loadUser(){
   if(!user){ showAuth(); return;}
   currentUser=user;
   const nickn=user.user_metadata?.nickname||user.email;
-  userAvatar.textContent=nickn.charAt(0).toUpperCase();
+  userAvatar.textContent=(nickn[0]||"?").toUpperCase();
   userNameTop.textContent=nickn;
   deleteBtn.style.display=(nickn.toLowerCase()==="pablodev")?"block":"none";
   showApp();
@@ -305,13 +325,14 @@ $("deleteBtn").onclick=async()=>{
 
 /* -------------------- Games: Load & Render -------------------- */
 async function loadGames(){
+  // admitir title o name
   const {data, error}=await supabase
     .from("games")
-    .select("id,creator_id,title,description,code,likes,dislikes,visits,created_at")
+    .select("id,creator_id,title,name,description,code,likes,dislikes,visits,created_at")
     .order("created_at",{ascending:false})
     .limit(200);
   if(error){ console.warn("loadGames error", error); gamesGrid.innerHTML="<p class='metaMuted'>No se pudieron cargar los juegos.</p>"; return; }
-  allGames = data || [];
+  allGames = (data||[]).map(g=>({...g, title: g.title ?? g.name}));
   // nombres de creador desde profiles
   const ids=[...new Set(allGames.map(g=>g.creator_id).filter(Boolean))];
   let nameMap={};
@@ -324,7 +345,7 @@ async function loadGames(){
 }
 function renderHome(){
   const q=searchInput.value.trim().toLowerCase();
-  const list = q? allGames.filter(g=> (g.title||"").toLowerCase().includes(q)) : allGames;
+  const list = q? allGames.filter(g=> ((g.title||"").toLowerCase().includes(q))) : allGames;
   gamesGrid.innerHTML="";
   if(!list.length){ gamesGrid.innerHTML="<div class='metaMuted'>No se encontraron juegos.</div>"; return; }
   for(const g of list){
