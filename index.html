@@ -13,47 +13,51 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
 
+/* Topbar */
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:20;backdrop-filter:saturate(1.1) blur(4px)}
-.logo{font-family:"Fredoka One";font-size:22px;background:linear-gradient(90deg,var(--grad1),var(--grad2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;transform:translateY(-6px);animation:fadeIn .5s ease .1s both}
+.logo{font-family:"Fredoka One";font-size:22px;background:linear-gradient(90deg,var(--grad1),var(--grad2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .userMenu{position:relative;}
 .userBtn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;font-weight:700;cursor:pointer;transition:.2s;box-shadow:0 8px 18px rgba(255,138,0,.25);transform:translateZ(0)}
 .userBtn:hover{filter:brightness(1.06);transform:translateY(-1px)}
 .userBtn:active{transform:translateY(0)}
 .avatar{width:28px;height:28px;border-radius:50%;background:#fff;color:#2a2000;display:flex;align-items:center;justify-content:center;font-family:"Fredoka One"; box-shadow:0 2px 8px rgba(0,0,0,.12)}
-.dropdown{position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.15);display:none;flex-direction:column;min-width:200px;overflow:hidden;z-index:30;animation:pop .16s ease both}
+.dropdown{position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.15);display:none;flex-direction:column;min-width:200px;overflow:hidden;z-index:30}
 .dropdown button{background:none;border:0;text-align:left;padding:12px 16px;cursor:pointer;font-weight:600;color:var(--text);transition:.15s;width:100%}
 .dropdown button:hover{background:#fafafa}
 
-main{max-width:1000px;margin:24px auto 90px;padding:0 18px;animation:fadeIn .35s ease both}
-.searchBox{margin-bottom:18px;display:flex;gap:10px;animation:slideUp .35s ease .05s both}
+/* Main & grids */
+main{max-width:1000px;margin:24px auto 90px;padding:0 18px}
+.searchBox{margin-bottom:18px;display:flex;gap:10px}
 .searchBox input{flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:15px;transition:.15s}
 .searchBox input:focus{border-color:#ffd24d;outline:none;box-shadow:0 0 0 4px #ffe08d60}
 .gamesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.gameCard{border:1px solid var(--border);border-radius:16px;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.06);padding:12px;transition:.2s;cursor:pointer;display:flex;flex-direction:column;gap:8px;transform:translateZ(0);animation:cardIn .25s ease both}
+.gameCard{border:1px solid var(--border);border-radius:16px;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.06);padding:12px;transition:.2s;cursor:pointer;display:flex;flex-direction:column;gap:8px;transform:translateZ(0)}
 .gameCard:hover{transform:translateY(-4px)}
 .cardTitle{font-weight:800}
 .cardPreview{width:100%;height:140px;border:0;border-radius:12px;background:#f3f3f3;pointer-events:none}
 .metaMuted{color:var(--muted);font-size:13px}
 .hidden{display:none}
 
-.wrapAuth{max-width:420px;margin:10vh auto;padding:24px;border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.08);background:#fff;animation:fadeIn .3s ease both}
+/* Auth */
+.wrapAuth{max-width:420px;margin:10vh auto;padding:24px;border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.08);background:#fff}
 input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--border);border-radius:12px;font-size:15px;transition:.15s}
 input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 .btn{border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;color:#2a2000;background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s;box-shadow:0 8px 18px rgba(255,138,0,.25);transform:translateZ(0)}
 .btn:hover{background:linear-gradient(90deg,#ffa12b,#ffe04d);transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn--danger{background:linear-gradient(90deg,#ff6961,#ffd200)}
-
 .error{color:var(--warn);font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
 .status{color:#2563eb;font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
 .loader{display:inline-block;width:16px;height:16px;border:3px solid #ffd24d;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
 .link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;text-align:center;display:block;margin-top:12px}
 
+/* Perfil */
 .profileView{max-width:700px;margin:0 auto}
 .profileHeader{text-align:center;margin-bottom:16px}
 .profileAvatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:40px;margin:0 auto 10px;box-shadow:0 10px 22px rgba(255,138,0,.25)}
 .stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted)}
 
+/* Página de juego */
 .gamePage{max-width:900px;margin:0 auto}
 .previewLarge{width:100%;height:380px;border:0;border-radius:14px;background:#f3f3f3;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.08)}
 .gameHeader{display:flex;flex-direction:column;gap:6px;margin-top:10px}
@@ -61,9 +65,11 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 .toggleBtn{position:relative}
 .toggleBtn.active::after{content:"";position:absolute;inset:-3px;border-radius:14px;box-shadow:0 0 0 3px #ffe08da6;pointer-events:none}
 
-.fab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#2a2000;background:linear-gradient(135deg,var(--grad1),var(--grad2));box-shadow:0 12px 28px rgba(255,138,0,.35);cursor:pointer;z-index:25;animation:pop .2s ease both}
+/* FAB subir juego */
+.fab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#2a2000;background:linear-gradient(135deg,var(--grad1),var(--grad2));box-shadow:0 12px 28px rgba(255,138,0,.35);cursor:pointer;z-index:25}
 .fab:hover{transform:translateY(-2px)}
 
+/* Uploader */
 .uploader{max-width:900px;margin:0 auto}
 .tabbar{display:flex;gap:10px;margin-top:10px}
 .tabbar button{border:1px solid var(--border);background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;transition:.15s}
@@ -73,16 +79,14 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 .counter{color:var(--muted);font-size:13px;margin-left:auto}
 
-/* Overlay de juego */
-.overlay{position:fixed;inset:0;background:#0b0c10;display:flex;flex-direction:column;z-index:60;animation:fadeIn .15s ease both}
-.overlayTop{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #111;color:#fff;background:linear-gradient(90deg,#0b0c10,#151922)}
-.playFrame{flex:1;border:0;width:100%;background:#000;pointer-events:auto}
+/* Fullscreen Player (sin textos) */
+.playerFS{position:fixed;inset:0;background:#000;display:none;z-index:60}
+.fsFrame{position:absolute;inset:0;width:100%;height:100%;border:0}
+.fsClose{position:absolute;top:12px;right:12px;border:0;border-radius:999px;background:rgba(255,255,255,.9);color:#111;padding:8px 12px;font-weight:900;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.35)}
+.fsClose:hover{background:#fff}
 
-/* Animaciones */
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
-@keyframes pop{from{opacity:.6; transform:scale(.98)}to{opacity:1; transform:scale(1)}}
-@keyframes cardIn{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+/* Animaciones base */
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -102,7 +106,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
   </div>
 </header>
 
-<!-- LOGIN / REGISTRO (SIN CAMBIOS EN LÓGICA) -->
+<!-- LOGIN / REGISTRO -->
 <div class="wrapAuth" id="authView">
   <h1 style="font-family:'Fredoka One';text-align:center;">Nebula Arcade</h1>
   <div id="loginForm">
@@ -193,18 +197,14 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 <!-- FAB -->
 <button id="fab" class="fab hidden" title="Subir juego" type="button">+</button>
 
-<!-- OVERLAY JUGAR -->
-<div id="playOverlay" class="overlay hidden">
-  <div class="overlayTop">
-    <div id="overlayTitle">Jugando…</div>
-    <button id="overlayClose" class="btn">Salir</button>
-  </div>
-  <!-- FIX: permitir same-origin dentro del overlay -->
-  <iframe id="playFrame" class="playFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+<!-- FULLSCREEN PLAYER (sin textos, solo juego + salir) -->
+<div id="playerFS" class="playerFS" style="display:none;">
+  <iframe id="fsFrame" class="fsFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+  <button id="fsClose" class="fsClose" type="button">Salir</button>
 </div>
 
 <script>
-/* ========= Config & Auth REST (login/registro se mantiene igual) ========= */
+/* ========= Config & Auth (REST) ========= */
 const SUPA_URL="https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
 
@@ -273,7 +273,7 @@ async function logout(){
   clearSession();
 }
 
-/* ========= DOM refs ========= */
+/* ========= DOM ========= */
 const $=id=>document.getElementById(id);
 const topbar=$("topbar"), authView=$("authView"), appView=$("appView");
 const homeView=$("homeView"), profileView=$("profileView"), gameView=$("gameView"), uploadView=$("uploadView");
@@ -291,14 +291,14 @@ const loginForm=$("loginForm"), signupForm=$("signupForm"), showSignup=$("showSi
 const loginEmail=$("loginEmail"), loginPass=$("loginPass"), loginBtn=$("loginBtn"), loginError=$("loginError"), loginStatus=$("loginStatus");
 const signupBtn=$("signupBtn"), signupError=$("signupError"), signupStatus=$("signupStatus"), nick=$("nick"), signupEmail=$("signupEmail"), signupPass=$("signupPass");
 const cancelUploadBtn=$("cancelUploadBtn"), submitGameBtn=$("submitGameBtn");
-const playOverlay=$("playOverlay"), playFrame=$("playFrame"), overlayTitle=$("overlayTitle"), overlayClose=$("overlayClose");
+const playerFS=$("playerFS"), fsFrame=$("fsFrame"), fsClose=$("fsClose");
 
 /* ========= Estado ========= */
 let currentUser=null;
 let allGames=[];
 let currentGame=null;
 let viewingUserId=null;
-let currentVote=null; // {id,type}
+let currentVote=null;
 
 /* ========= Utils ========= */
 function closeDropdown(){ dropdown.style.display="none"; }
@@ -365,7 +365,7 @@ function setTopbarUser(u){
   const nick=u?.user_metadata?.nickname || u?.email || "Usuario";
   userAvatar.textContent=(nick[0]||"?").toUpperCase();
   userNameTop.textContent=nick;
-  deleteBtn.style.display=(nick.toLowerCase()==="pablodev")?"block":"none"; /* legado: mantener */
+  deleteBtn.style.display=(nick.toLowerCase()==="pablodev")?"block":"none"; /* legado */
 }
 function showAuth(){authView.classList.remove("hidden");appView.classList.add("hidden");topbar.classList.add("hidden");}
 function showApp(){authView.classList.add("hidden");appView.classList.remove("hidden");topbar.classList.remove("hidden"); setView("home");}
@@ -424,8 +424,8 @@ function renderHome(){
   const list = q? allGames.filter(g=> ((g.title||"").toLowerCase().includes(q))) : allGames;
   gamesGrid.innerHTML="";
   if(!list.length){ gamesGrid.innerHTML="<div class='metaMuted'>No se encontraron juegos.</div>"; return; }
-  list.forEach((g,i)=>{
-    const card=document.createElement("div"); card.className="gameCard"; card.style.animationDelay=`${i*0.02}s`;
+  list.forEach((g)=>{
+    const card=document.createElement("div"); card.className="gameCard";
     card.innerHTML=`
       <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
       <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
@@ -491,7 +491,7 @@ async function handleVote(type){
         await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ dislikes:g.dislikes } });
       }
     }else if(prev===null){
-      // No tenía voto -> insert
+      // Insert nuevo voto
       const ins = await rest("POST","/rest/v1/votes",{ body:{ user_id:currentUser.id, game_id:g.id, type }});
       currentVote = ins?.[0] || null;
       if(type==="like"){
@@ -528,42 +528,23 @@ async function handleVote(type){
   }
 }
 
-/* ========= Visitas al JUGAR + Overlay con fallback ========= */
-playBtn.onclick = async ()=>{
+/* ========= JUGAR en pantalla completa ========= */
+playBtn.onclick = async () => {
   if(!currentGame) return;
+  // abrir FS
   document.body.style.overflow="hidden";
-  overlayTitle.textContent = (currentGame.title || "Jugando…") + " · cargando…";
-  playOverlay.classList.remove("hidden");
+  playerFS.style.display="block";
+  fsFrame.srcdoc = srcdocSafe(currentGame.code);
 
-  // Cargar juego (interactuable)
-  let loaded = false;
-  playFrame.onload = () => {
-    loaded = true;
-    overlayTitle.textContent = currentGame.title || "Jugando…";
-  };
-  playFrame.srcdoc = srcdocSafe(currentGame.code);
-
-  // Fallback si no cargó en 1500ms
-  setTimeout(() => {
-    if (loaded) return;
-    overlayTitle.textContent = (currentGame.title || "Jugando…") + " · no se pudo iniciar";
-    try {
-      const blob = new Blob([currentGame.code || ""], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      const ok = confirm("El juego no se pudo iniciar en el embed. ¿Abrir en una pestaña nueva?");
-      if (ok) window.open(url, "_blank");
-    } catch {}
-  }, 1500);
-
-  // Contar visita (solo al jugar)
+  // contar visita (solo al jugar)
   try{
     const updated = await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${currentGame.id}` }, body:{ visits:(currentGame.visits||0)+1 } });
     if(updated?.[0]){ currentGame.visits=updated[0].visits; visitCount.textContent=currentGame.visits; }
   }catch(_){}
 };
-overlayClose.onclick = ()=>{
-  playOverlay.classList.add("hidden");
-  playFrame.srcdoc="";
+fsClose.onclick = () => {
+  fsFrame.srcdoc="";
+  playerFS.style.display="none";
   document.body.style.overflow="";
 };
 
@@ -576,7 +557,6 @@ deleteGameBtn.onclick = async ()=>{
   if(!confirm(`¿Eliminar "${g.title||'este juego'}"?`)) return;
   try{
     await rest("DELETE","/rest/v1/games",{ query:{ id:`eq.${g.id}` } });
-    // quitar local
     allGames = allGames.filter(x=>x.id!==g.id);
     setView("home"); renderHome();
   }catch(e){
@@ -605,8 +585,8 @@ async function openProfile(userId){
     const noDiv=document.createElement("div"); noDiv.className="metaMuted"; noDiv.style.textAlign="center"; noDiv.style.padding="12px"; noDiv.textContent=txt;
     userGamesGrid.appendChild(noDiv);
   }else{
-    mine.forEach((g,i)=>{
-      const card=document.createElement("div"); card.className="gameCard"; card.style.animationDelay=`${i*0.02}s`;
+    mine.forEach((g)=>{
+      const card=document.createElement("div"); card.className="gameCard";
       card.innerHTML=`
         <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
         <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
