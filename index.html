@@ -170,9 +170,41 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 /* -------------------- Supabase -------------------- */
 const SUPA_URL="https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
-const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
 
-/* -------------------- Tokens de magic link (si llegan en URL) -------------------- */
+/* -------------------- Persistencia manual extra -------------------- */
+const NA_SESSION_KEY = "na_manual_session"; // cinturón de seguridad
+
+function saveSession(session){
+  try{
+    if(session?.access_token && session?.refresh_token){
+      localStorage.setItem(NA_SESSION_KEY, JSON.stringify({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        ts: Date.now()
+      }));
+    }
+  }catch(_){}
+}
+function clearSavedSession(){ try{ localStorage.removeItem(NA_SESSION_KEY); }catch(_){} }
+
+async function restoreManualSessionIfNeeded(){
+  // Si Supabase no tiene sesión, intenta restaurar manualmente
+  const { data:{ session } } = await supabase.auth.getSession();
+  if(session) return; // ya hay sesión
+  try{
+    const raw = localStorage.getItem(NA_SESSION_KEY);
+    if(!raw) return;
+    const { access_token, refresh_token } = JSON.parse(raw);
+    if(access_token && refresh_token){
+      await supabase.auth.setSession({ access_token, refresh_token });
+    }
+  }catch(e){ console.warn("restoreManualSessionIfNeeded error:", e); }
+}
+
+/* -------------------- Tokens de magic link en URL -------------------- */
 (async function applyAuthFromUrl(){
   const usp=new URLSearchParams(location.search);
   const hash=location.hash.startsWith('#')?location.hash.slice(1):'';
@@ -217,7 +249,7 @@ function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</bod
 function nic(s){ return (s||"").trim(); }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
 
-/* -------------------- Auth (misma lógica que la que te funcionaba) -------------------- */
+/* -------------------- Auth -------------------- */
 showSignup.onclick=()=>{loginForm.classList.add("hidden");signupForm.classList.remove("hidden");};
 showLogin.onclick=()=>{signupForm.classList.add("hidden");loginForm.classList.remove("hidden");};
 
@@ -230,10 +262,9 @@ signupBtn.onclick=async()=>{
   signupStatus.innerHTML='<span class="loader"></span>Creando cuenta...';
   try{
     const {data,error}=await supabase.auth.signUp({email,password:pass,options:{data:{nickname}}});
-    console.log("Signup response:", data, error);
     signupStatus.classList.add("hidden");
     if(error){ signupError.textContent="Error: "+error.message; return;}
-    // Mensaje que querías:
+    // Mostrar instrucción de verificación
     signupError.style.color="#2563eb";
     signupError.textContent="📧 Te enviamos un email de verificación. Abre el enlace para entrar (revisa SPAM).";
   }catch(e){ signupError.textContent="Error inesperado: "+e.message; signupStatus.classList.add("hidden"); }
@@ -246,7 +277,6 @@ loginBtn.onclick=async()=>{
   loginStatus.innerHTML='<span class="loader"></span>Verificando credenciales...';
   try{
     const {data,error}=await supabase.auth.signInWithPassword({email,password:pass});
-    console.log("Login response:", data, error);
     loginStatus.classList.add("hidden");
     if(error){
       if(error.message.includes("Invalid login credentials")) loginError.textContent="❌ Credenciales incorrectas.";
@@ -254,19 +284,17 @@ loginBtn.onclick=async()=>{
       return;
     }
     if(!data?.user){ loginError.textContent="⚠️ No se recibió usuario en la respuesta."; return;}
-    // MOSTRAR APP INMEDIATAMENTE
-    await loadUser();
-    showApp();
-    // Cargar juegos en segundo plano (no bloquea la UI)
-    loadGames();
+    await loadUser(); showApp(); loadGames();
   }catch(e){ loginError.textContent="Error inesperado: "+e.message; loginStatus.classList.add("hidden"); }
 };
 
-/* -------------------- Session -------------------- */
-supabase.auth.onAuthStateChange(async (_e,session)=>{
-  console.log("Auth state:", _e, session);
+/* -------------------- Session & persist extra -------------------- */
+supabase.auth.onAuthStateChange(async (event, session)=>{
+  // guarda/borra manualmente
+  if(session){ saveSession(session); } else { clearSavedSession(); }
   if(session){ await loadUser(); showApp(); loadGames(); } else { showAuth(); }
 });
+
 async function loadUser(){
   const {data:{user}}=await supabase.auth.getUser();
   if(!user){ showAuth(); return;}
@@ -292,7 +320,7 @@ function setView(v){
 userBtn.onclick=()=>{ dropdown.style.display = (dropdown.style.display==="flex")?"none":"flex"; dropdown.style.flexDirection="column"; };
 window.addEventListener("click",(e)=>{ if(!userMenu.contains(e.target)) closeDropdown(); });
 $("viewProfileBtn").onclick=()=>{ if(currentUser) openProfile(currentUser.id); closeDropdown(); };
-$("logoutBtn").onclick=async()=>{ await supabase.auth.signOut(); closeDropdown(); };
+$("logoutBtn").onclick=async()=>{ await supabase.auth.signOut(); clearSavedSession(); closeDropdown(); };
 $("deleteBtn").onclick=async()=>{
   if(!currentUser) return;
   if(!confirm("¿Seguro que quieres ELIMINAR tu cuenta y todos tus juegos?")) return;
@@ -300,6 +328,7 @@ $("deleteBtn").onclick=async()=>{
     await supabase.from("games").delete().eq("creator_id", currentUser.id);
     await supabase.from("profiles").delete().eq("id", currentUser.id);
     await supabase.auth.signOut();
+    clearSavedSession();
     alert("Cuenta eliminada (datos de juegos y perfil).");
   }catch(e){ alert("No se pudo eliminar todo. Revisa políticas RLS."); }
   closeDropdown();
@@ -318,7 +347,6 @@ async function loadGames(){
     return;
   }
   allGames = (data||[]).map(g=>({...g, title: g.title ?? g.name}));
-  // nombres de creador desde profiles
   const ids=[...new Set(allGames.map(g=>g.creator_id).filter(Boolean))];
   let nameMap={};
   if(ids.length){
@@ -390,7 +418,6 @@ backHomeFromGame.onclick=()=>{ setView("home"); };
 async function openProfile(userId){
   viewingUserId = userId;
   setView("profile");
-  // nickname
   let nick = "Usuario";
   if(currentUser && currentUser.id===userId){
     nick = currentUser.user_metadata?.nickname || currentUser.email;
@@ -432,6 +459,7 @@ backHomeBtn.onclick=()=>setView("home");
 
 /* -------------------- Upload (+) -------------------- */
 const MAX_BYTES=1048576;
+const fab=$("fab");
 fab.onclick=()=>{ openUpload(); };
 function openUpload(){
   if(!currentUser){ alert("Inicia sesión para subir juegos."); return; }
@@ -483,12 +511,22 @@ submitGameBtn.onclick=async()=>{
 function updateFab(){ fab.classList.toggle("hidden", !currentUser || !homeView || homeView.classList.contains("hidden")); }
 
 /* -------------------- Init -------------------- */
-(function init(){
-  supabase.auth.getSession().then(({data:{session}})=>{ if(session){ loadUser().then(()=>{showApp(); loadGames();}); } else { showAuth(); } });
+(async function init(){
+  // 1) Intenta restaurar manualmente si hace falta
+  await restoreManualSessionIfNeeded();
+
+  // 2) Luego consulta la sesión y pinta la vista correcta
+  const {data:{session}} = await supabase.auth.getSession();
+  if(session){ await loadUser(); showApp(); loadGames(); } else { showAuth(); }
+
+  // 3) Observa cambios de vista para FAB
   const obs = new MutationObserver(updateFab);
   obs.observe(homeView,{attributes:true,attributeFilter:["class"]});
-  // cerrar menú al pulsar opción
-  ["viewProfileBtn","logoutBtn","deleteBtn"].forEach(id=>{ const el=$(id); if(el) el.addEventListener("click", ()=>closeDropdown()); });
+
+  // 4) Cerrar menú al pulsar opción
+  ["viewProfileBtn","logoutBtn","deleteBtn"].forEach(id=>{
+    const el=$(id); if(el) el.addEventListener("click", ()=>closeDropdown());
+  });
 })();
 </script>
 </body>
