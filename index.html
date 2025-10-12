@@ -6,56 +6,83 @@
 <title>Nebula Arcade</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--grad1:#ff8a00;--grad2:#ffd200;--text:#1b1f24;--border:#e5e7eb;--muted:#6b7280;--bg:#fff;}
+:root{
+  --grad1:#ff8a00;--grad2:#ffd200;--text:#1b1f24;--border:#e5e7eb;--muted:#6b7280;--bg:#fff;
+  --ok:#16a34a;--warn:#b91c1c;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Inter,system-ui;background:var(--bg);color:var(--text);}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:20;}
-.logo{font-family:"Fredoka One";font-size:22px;background:linear-gradient(90deg,var(--grad1),var(--grad2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:20;backdrop-filter:saturate(1.1) blur(4px)}
+.logo{font-family:"Fredoka One";font-size:22px;background:linear-gradient(90deg,var(--grad1),var(--grad2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;transform:translateY(-6px);animation:fadeIn .5s ease .1s both}
 .userMenu{position:relative;}
-.userBtn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;font-weight:700;cursor:pointer;transition:.2s;}
-.userBtn:hover{filter:brightness(1.05);}
-.avatar{width:28px;height:28px;border-radius:50%;background:#fff;color:#2a2000;display:flex;align-items:center;justify-content:center;font-family:"Fredoka One";}
-.dropdown{position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:none;flex-direction:column;min-width:180px;overflow:hidden;z-index:30;}
-.dropdown button{background:none;border:0;text-align:left;padding:10px 16px;cursor:pointer;font-weight:600;color:var(--text);transition:.15s;width:100%;}
-.dropdown button:hover{background:#f9f9f9;}
-main{max-width:1000px;margin:24px auto 90px;padding:0 18px;}
-.searchBox{margin-bottom:18px;display:flex;gap:10px;}
-.searchBox input{flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:15px;}
-.searchBox input:focus{border-color:#ffd24d;outline:none;box-shadow:0 0 0 4px #ffe08d60;}
-.gamesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
-.gameCard{border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.05);padding:12px;transition:.2s;cursor:pointer;display:flex;flex-direction:column;gap:8px;}
-.gameCard:hover{transform:translateY(-3px);}
+.userBtn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;font-weight:700;cursor:pointer;transition:.2s;box-shadow:0 8px 18px rgba(255,138,0,.25);transform:translateZ(0)}
+.userBtn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.userBtn:active{transform:translateY(0)}
+.avatar{width:28px;height:28px;border-radius:50%;background:#fff;color:#2a2000;display:flex;align-items:center;justify-content:center;font-family:"Fredoka One"; box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.dropdown{position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.15);display:none;flex-direction:column;min-width:200px;overflow:hidden;z-index:30;animation:pop .16s ease both}
+.dropdown button{background:none;border:0;text-align:left;padding:12px 16px;cursor:pointer;font-weight:600;color:var(--text);transition:.15s;width:100%}
+.dropdown button:hover{background:#fafafa}
+
+main{max-width:1000px;margin:24px auto 90px;padding:0 18px;animation:fadeIn .35s ease both}
+.searchBox{margin-bottom:18px;display:flex;gap:10px;animation:slideUp .35s ease .05s both}
+.searchBox input{flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:15px;transition:.15s}
+.searchBox input:focus{border-color:#ffd24d;outline:none;box-shadow:0 0 0 4px #ffe08d60}
+.gamesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.gameCard{border:1px solid var(--border);border-radius:16px;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.06);padding:12px;transition:.2s;cursor:pointer;display:flex;flex-direction:column;gap:8px;transform:translateZ(0);animation:cardIn .25s ease both}
+.gameCard:hover{transform:translateY(-4px)}
 .cardTitle{font-weight:800}
-.cardPreview{width:100%;height:140px;border:0;border-radius:10px;background:#f3f3f3;}
+.cardPreview{width:100%;height:140px;border:0;border-radius:12px;background:#f3f3f3;pointer-events:none}
 .metaMuted{color:var(--muted);font-size:13px}
-.hidden{display:none;}
-.wrapAuth{max-width:420px;margin:10vh auto;padding:24px;border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.06);background:#fff;}
-input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--border);border-radius:12px;font-size:15px}
+.hidden{display:none}
+
+.wrapAuth{max-width:420px;margin:10vh auto;padding:24px;border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.08);background:#fff;animation:fadeIn .3s ease both}
+input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--border);border-radius:12px;font-size:15px;transition:.15s}
 input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
-.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;color:#2a2000;background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;color:#2a2000;background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s;box-shadow:0 8px 18px rgba(255,138,0,.25);transform:translateZ(0)}
 .btn:hover{background:linear-gradient(90deg,#ffa12b,#ffe04d);transform:translateY(-1px)}
-.error{color:#b91c1c;font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
+.btn:active{transform:translateY(0)}
+.btn--danger{background:linear-gradient(90deg,#ff6961,#ffd200)}
+
+.error{color:var(--warn);font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
 .status{color:#2563eb;font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
 .loader{display:inline-block;width:16px;height:16px;border:3px solid #ffd24d;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}
 .link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;text-align:center;display:block;margin-top:12px}
-.profileView{max-width:700px;margin:0 auto;}
+
+.profileView{max-width:700px;margin:0 auto}
 .profileHeader{text-align:center;margin-bottom:16px}
-.profileAvatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:40px;margin:0 auto 10px;}
-.stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted);}
-.gamePage{max-width:900px;margin:0 auto;}
-.previewLarge{width:100%;height:380px;border:0;border-radius:14px;background:#f3f3f3;}
-.fab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#2a2000;background:linear-gradient(135deg,var(--grad1),var(--grad2));box-shadow:0 10px 24px rgba(255,138,0,.35);cursor:pointer;z-index:25;}
+.profileAvatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:40px;margin:0 auto 10px;box-shadow:0 10px 22px rgba(255,138,0,.25)}
+.stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted)}
+
+.gamePage{max-width:900px;margin:0 auto}
+.previewLarge{width:100%;height:380px;border:0;border-radius:14px;background:#f3f3f3;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.08)}
+.gameHeader{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.gameActions{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.toggleBtn{position:relative}
+.toggleBtn.active::after{content:"";position:absolute;inset:-3px;border-radius:14px;box-shadow:0 0 0 3px #ffe08da6;pointer-events:none}
+
+.fab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#2a2000;background:linear-gradient(135deg,var(--grad1),var(--grad2));box-shadow:0 12px 28px rgba(255,138,0,.35);cursor:pointer;z-index:25;animation:pop .2s ease both}
 .fab:hover{transform:translateY(-2px)}
-/* Upload/editor */
-.uploader{max-width:900px;margin:0 auto;}
+
+.uploader{max-width:900px;margin:0 auto}
 .tabbar{display:flex;gap:10px;margin-top:10px}
-.tabbar button{border:1px solid var(--border);background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
-.tabbar button.active{background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;border:0}
+.tabbar button{border:1px solid var(--border);background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;transition:.15s}
+.tabbar button.active{background:linear-gradient(90deg,var(--grad1),var(--grad2));color:#2a2000;border:0;box-shadow:0 8px 18px rgba(255,138,0,.25)}
 .editor{width:100%;height:260px;border:1px solid var(--border);border-radius:12px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:14px}
 .previewEdit{width:100%;height:260px;border:0;border-radius:12px;background:#f3f3f3}
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 .counter{color:var(--muted);font-size:13px;margin-left:auto}
+
+/* Overlay de juego */
+.overlay{position:fixed;inset:0;background:#0b0c10;display:flex;flex-direction:column;z-index:60;animation:fadeIn .15s ease both}
+.overlayTop{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #111;color:#fff;background:linear-gradient(90deg,#0b0c10,#151922)}
+.playFrame{flex:1;border:0;width:100%;background:#000;pointer-events:auto}
+
+/* Animaciones */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+@keyframes pop{from{opacity:.6; transform:scale(.98)}to{opacity:1; transform:scale(1)}}
+@keyframes cardIn{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
 </style>
 </head>
 <body>
@@ -75,7 +102,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
   </div>
 </header>
 
-<!-- LOGIN / REGISTRO -->
+<!-- LOGIN / REGISTRO (SIN CAMBIOS EN LÓGICA) -->
 <div class="wrapAuth" id="authView">
   <h1 style="font-family:'Fredoka One';text-align:center;">Nebula Arcade</h1>
   <div id="loginForm">
@@ -128,15 +155,16 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
   <!-- GAME PAGE -->
   <div id="gameView" class="hidden gamePage">
     <iframe id="gamePreview" class="previewLarge" sandbox="allow-scripts"></iframe>
-    <div class="gameHeader" style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+    <div class="gameHeader">
       <h2 id="gameTitle">Nombre del juego</h2>
       <p id="gameDesc" class="metaMuted"></p>
       <div class="metaMuted">❤️ <span id="likeCount">0</span> · 👁️ <span id="visitCount">0</span></div>
       <p>Creador: <span id="gameCreator" style="color:#ff8a00;font-weight:700;cursor:pointer;">Usuario</span></p>
-      <div class="gameActions" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
-        <button id="likeBtn" class="btn" style="padding:10px 16px" type="button">Like</button>
-        <button id="dislikeBtn" class="btn" style="padding:10px 16px" type="button">Dislike</button>
+      <div class="gameActions">
+        <button id="likeBtn" class="btn toggleBtn" type="button">Like</button>
+        <button id="dislikeBtn" class="btn toggleBtn" type="button">Dislike</button>
         <button id="playBtn" class="btn" style="padding:14px 28px;font-weight:900" type="button">Jugar</button>
+        <button id="deleteGameBtn" class="btn btn--danger hidden" type="button">🗑️ Eliminar juego</button>
       </div>
       <div style="margin-top:16px"><button id="backHomeFromGame" class="btn" type="button">🏠 Volver</button></div>
     </div>
@@ -165,17 +193,25 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 <!-- FAB -->
 <button id="fab" class="fab hidden" title="Subir juego" type="button">+</button>
 
+<!-- OVERLAY JUGAR -->
+<div id="playOverlay" class="overlay hidden">
+  <div class="overlayTop">
+    <div id="overlayTitle">Jugando…</div>
+    <button id="overlayClose" class="btn">Salir</button>
+  </div>
+  <!-- FIX: permitir same-origin dentro del overlay -->
+  <iframe id="playFrame" class="playFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
 <script>
-/* ========= Config ========= */
+/* ========= Config & Auth REST (login/registro se mantiene igual) ========= */
 const SUPA_URL="https://arypwvzmjedlhsrzrgxw.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeXB3dnptamVkbGhzcnpyZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNzgwNDgsImV4cCI6MjA3NTc1NDA0OH0.oLuc_NKB2xh0-43clDOSP0ShISP9shjdrSJgd0jo0uY";
 
-/* ========= Mini cliente REST + Auth ========= */
 const SESSION_KEY="na_session_v1";
-let session = null; // {access_token,refresh_token,expires_at,user}
-
-function loadSession(){ try{ session = JSON.parse(localStorage.getItem(SESSION_KEY)||"null"); }catch{ session=null; } }
-function saveSession(s){ session = s; localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+let session=null;
+function loadSession(){ try{session=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");}catch{session=null;} }
+function saveSession(s){ session=s; localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
 function clearSession(){ session=null; localStorage.removeItem(SESSION_KEY); }
 
 async function ensureFreshToken(){
@@ -192,7 +228,6 @@ async function ensureFreshToken(){
   const expires_at = now + (data.expires_in||3600);
   saveSession({ access_token:data.access_token, refresh_token:data.refresh_token||session.refresh_token, expires_at, user: session.user });
 }
-
 async function rest(method, path, { query=null, body=null }={}){
   await ensureFreshToken();
   const qs = query ? "?"+new URLSearchParams(query).toString() : "";
@@ -207,12 +242,10 @@ async function rest(method, path, { query=null, body=null }={}){
     body: body? JSON.stringify(body): null
   });
   const text = await res.text();
-  let json = null; try{ json = text? JSON.parse(text): null; }catch{ json = null; }
+  let json=null; try{ json = text? JSON.parse(text): null; }catch{ json=null; }
   if(!res.ok) throw new Error(json?.message || json?.error_description || json?.msg || `HTTP ${res.status}`);
   return json;
 }
-
-/* Auth directo */
 async function signUp(email,password,nickname){
   return rest("POST","/auth/v1/signup",{ body:{ email, password, data:{ nickname } } });
 }
@@ -234,16 +267,13 @@ async function login(email,password){
 async function logout(){
   if(session){
     try{
-      await fetch(`${SUPA_URL}/auth/v1/logout`,{
-        method:"POST",
-        headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${session.access_token}` }
-      });
+      await fetch(`${SUPA_URL}/auth/v1/logout`,{ method:"POST", headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${session.access_token}` } });
     }catch{}
   }
   clearSession();
 }
 
-/* ========= DOM ========= */
+/* ========= DOM refs ========= */
 const $=id=>document.getElementById(id);
 const topbar=$("topbar"), authView=$("authView"), appView=$("appView");
 const homeView=$("homeView"), profileView=$("profileView"), gameView=$("gameView"), uploadView=$("uploadView");
@@ -253,7 +283,7 @@ const logoutBtn=$("logoutBtn"), viewProfileBtn=$("viewProfileBtn"), backHomeBtn=
 const gamesGrid=$("gamesGrid"), userGamesGrid=$("userGamesGrid"), searchInput=$("searchInput");
 const fab=$("fab");
 const gamePreview=$("gamePreview"), gameTitle=$("gameTitle"), gameDesc=$("gameDesc"), likeCount=$("likeCount"), visitCount=$("visitCount"), gameCreator=$("gameCreator");
-const likeBtn=$("likeBtn"), dislikeBtn=$("dislikeBtn"), playBtn=$("playBtn"), backHomeFromGame=$("backHomeFromGame");
+const likeBtn=$("likeBtn"), dislikeBtn=$("dislikeBtn"), playBtn=$("playBtn"), backHomeFromGame=$("backHomeFromGame"), deleteGameBtn=$("deleteGameBtn");
 const profileAvatar=$("profileAvatar"), profileName=$("profileName"), likesCount=$("likesCount"), visitsCount=$("visitsCount");
 const gameNameIn=$("gameNameIn"), gameDescIn=$("gameDescIn"), codeEditor=$("codeEditor"), codePreview=$("codePreview");
 const tabEdit=$("tabEdit"), tabPreview=$("tabPreview"), byteCounter=$("byteCounter");
@@ -261,12 +291,14 @@ const loginForm=$("loginForm"), signupForm=$("signupForm"), showSignup=$("showSi
 const loginEmail=$("loginEmail"), loginPass=$("loginPass"), loginBtn=$("loginBtn"), loginError=$("loginError"), loginStatus=$("loginStatus");
 const signupBtn=$("signupBtn"), signupError=$("signupError"), signupStatus=$("signupStatus"), nick=$("nick"), signupEmail=$("signupEmail"), signupPass=$("signupPass");
 const cancelUploadBtn=$("cancelUploadBtn"), submitGameBtn=$("submitGameBtn");
+const playOverlay=$("playOverlay"), playFrame=$("playFrame"), overlayTitle=$("overlayTitle"), overlayClose=$("overlayClose");
 
 /* ========= Estado ========= */
 let currentUser=null;
 let allGames=[];
 let currentGame=null;
 let viewingUserId=null;
+let currentVote=null; // {id,type}
 
 /* ========= Utils ========= */
 function closeDropdown(){ dropdown.style.display="none"; }
@@ -274,15 +306,7 @@ function bytesOf(str){ return new Blob([str||""]).size; }
 function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</body></html>"; }
 function nic(s){ return (s||"").trim(); }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
-
-/* ========= Diagnóstico simple ========= */
-async function diagnose(label){
-  try{
-    const r1 = await fetch(`${SUPA_URL}/rest/v1/?select=now()`, { headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${SUPA_KEY}` }});
-    const r2 = await fetch(`${SUPA_URL}/auth/v1/health`, { headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${SUPA_KEY}` }});
-    label.textContent = `🔎 REST: ${r1.status} · AUTH: ${r2.status}`;
-  }catch{ label.textContent="🔎 No hay conexión (CORS/red)"; }
-}
+function isAdmin(){ return (currentUser?.email||"").toLowerCase()==="pablomassofia@gmail.com"; }
 
 /* ========= Auth UI ========= */
 showSignup.onclick=()=>{loginForm.classList.add("hidden");signupForm.classList.remove("hidden");};
@@ -314,7 +338,7 @@ loginBtn.onclick=async()=>{
   loginBtn.disabled=true;
   loginStatus.innerHTML='<span class="loader"></span>Verificando credenciales...';
   try{
-    await login(email,pass); // establece session local
+    await login(email,pass);
     loginStatus.textContent="✅ Sesión iniciada. Cargando…";
     await afterLoginBoot();
   }catch(e){
@@ -326,29 +350,22 @@ loginBtn.onclick=async()=>{
   }finally{ loginBtn.disabled=false; }
 };
 
-/* ========= Post-login boot ========= */
 async function afterLoginBoot(){
-  // Cargar sesión desde storage (ya puesta por login())
   loadSession();
   if(!session || !session.user){ loginError.textContent="⚠️ Sesión no disponible tras login."; return; }
   currentUser = session.user;
   setTopbarUser(currentUser);
   showApp();
-  try{
-    await loadGames();
-  }catch(e){
-    console.warn("loadGames error", e);
-    gamesGrid.innerHTML = "<div class='metaMuted'>No se pudieron cargar los juegos.</div>";
-  }
+  try{ await loadGames(); }catch(e){ gamesGrid.innerHTML="<div class='metaMuted'>No se pudieron cargar los juegos.</div>"; }
   loginStatus.classList.add("hidden");
 }
 
-/* ========= Topbar y vistas ========= */
+/* ========= Topbar & vistas ========= */
 function setTopbarUser(u){
   const nick=u?.user_metadata?.nickname || u?.email || "Usuario";
   userAvatar.textContent=(nick[0]||"?").toUpperCase();
   userNameTop.textContent=nick;
-  deleteBtn.style.display=(nick.toLowerCase()==="pablodev")?"block":"none";
+  deleteBtn.style.display=(nick.toLowerCase()==="pablodev")?"block":"none"; /* legado: mantener */
 }
 function showAuth(){authView.classList.remove("hidden");appView.classList.add("hidden");topbar.classList.add("hidden");}
 function showApp(){authView.classList.add("hidden");appView.classList.remove("hidden");topbar.classList.remove("hidden"); setView("home");}
@@ -362,7 +379,6 @@ function setView(v){
 
 viewProfileBtn.onclick=()=>{ if(currentUser) openProfile(currentUser.id); closeDropdown(); };
 logoutBtn.onclick=async()=>{ await logout(); currentUser=null; showAuth(); closeDropdown(); };
-
 userBtn.onclick=()=>{ dropdown.style.display=(dropdown.style.display==="flex")?"none":"flex"; dropdown.style.flexDirection="column"; };
 window.addEventListener("click",(e)=>{ if(!userMenu.contains(e.target)) closeDropdown(); });
 
@@ -379,7 +395,16 @@ deleteBtn.onclick=async()=>{
   closeDropdown();
 };
 
-/* ========= Datos: games & profiles ========= */
+/* ========= Diagnóstico simple ========= */
+async function diagnose(label){
+  try{
+    const r1 = await fetch(`${SUPA_URL}/rest/v1/?select=now()`, { headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${SUPA_KEY}` }});
+    const r2 = await fetch(`${SUPA_URL}/auth/v1/health`, { headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${SUPA_KEY}` }});
+    label.textContent = `🔎 REST: ${r1.status} · AUTH: ${r2.status}`;
+  }catch{ label.textContent="🔎 No hay conexión (CORS/red)"; }
+}
+
+/* ========= Games ========= */
 async function loadGames(){
   const params = { select:"id,creator_id,title,description,code,likes,dislikes,visits,created_at", order:"created_at.desc", limit:200 };
   const data = await rest("GET","/rest/v1/games",{ query:params });
@@ -387,7 +412,6 @@ async function loadGames(){
   const ids=[...new Set(allGames.map(g=>g.creator_id).filter(Boolean))];
   let nameMap={};
   if(ids.length){
-    // NO pre-encode: dejamos que URLSearchParams lo haga
     const list = `(${ids.map(x=>`"${x}"`).join(",")})`;
     const profs = await rest("GET","/rest/v1/profiles",{ query:{ select:"id,nickname", id:`in.${list}` } });
     (profs||[]).forEach(p=>{ nameMap[p.id]=p.nickname; });
@@ -400,8 +424,8 @@ function renderHome(){
   const list = q? allGames.filter(g=> ((g.title||"").toLowerCase().includes(q))) : allGames;
   gamesGrid.innerHTML="";
   if(!list.length){ gamesGrid.innerHTML="<div class='metaMuted'>No se encontraron juegos.</div>"; return; }
-  for(const g of list){
-    const card=document.createElement("div"); card.className="gameCard";
+  list.forEach((g,i)=>{
+    const card=document.createElement("div"); card.className="gameCard"; card.style.animationDelay=`${i*0.02}s`;
     card.innerHTML=`
       <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
       <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
@@ -409,34 +433,158 @@ function renderHome(){
     card.querySelector("iframe").srcdoc = srcdocSafe(g.code);
     card.onclick=()=>openGame(g.id);
     gamesGrid.appendChild(card);
-  }
+  });
 }
 searchInput.addEventListener("input", renderHome);
 
+/* ========= Game Page + Votos ========= */
 async function openGame(id){
   const g=allGames.find(x=>x.id===id); if(!g) return;
-  currentGame = g; setView("game");
+  currentGame = g; currentVote=null;
+  setView("game");
   gamePreview.srcdoc = srcdocSafe(g.code);
   gameTitle.textContent=g.title||"Sin título";
   gameDesc.textContent=g.description||"";
   likeCount.textContent=g.likes||0; visitCount.textContent=g.visits||0;
   gameCreator.textContent=g.creator_name||"Usuario";
   gameCreator.onclick=()=>openProfile(g.creator_id);
-  try{
-    const updated = await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ visits:(g.visits||0)+1 } });
-    if(updated?.[0]){ g.visits=updated[0].visits; visitCount.textContent=g.visits; }
-  }catch(_){}
-}
-likeBtn.onclick=()=>vote("likes");
-dislikeBtn.onclick=()=>vote("dislikes");
-async function vote(field){
-  if(!currentGame) return;
-  const local=(currentGame[field]||0)+1; currentGame[field]=local;
-  if(field==="likes") likeCount.textContent=local;
-  try{ await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${currentGame.id}` }, body:{ [field]:local } }); }catch(_){}
-}
-backHomeFromGame.onclick=()=>setView("home");
 
+  // Mostrar botón borrar si creador o admin
+  const canDelete = currentUser && (currentUser.id===g.creator_id || isAdmin());
+  deleteGameBtn.classList.toggle("hidden", !canDelete);
+
+  // Cargar mi voto (si estoy logueado)
+  if(currentUser){
+    try{
+      const rows = await rest("GET","/rest/v1/votes",{ query:{ select:"id,type", user_id:`eq.${currentUser.id}`, game_id:`eq.${g.id}` }});
+      currentVote = rows?.[0] || null;
+      syncVoteButtons();
+    }catch(_){ /* ignorar */ }
+  }else{
+    currentVote=null; syncVoteButtons();
+  }
+}
+function syncVoteButtons(){
+  likeBtn.classList.toggle("active", currentVote?.type==="like");
+  dislikeBtn.classList.toggle("active", currentVote?.type==="dislike");
+}
+likeBtn.onclick = ()=>handleVote("like");
+dislikeBtn.onclick = ()=>handleVote("dislike");
+
+async function handleVote(type){
+  if(!currentUser || !currentGame) { alert("Inicia sesión para votar."); return; }
+  const g=currentGame;
+  const prev = currentVote?.type || null;
+
+  try{
+    if(prev===type){
+      // Quitar voto
+      if(currentVote?.id){
+        await rest("DELETE","/rest/v1/votes",{ query:{ id:`eq.${currentVote.id}` }});
+      }
+      currentVote=null;
+      if(type==="like"){
+        g.likes=Math.max(0,(g.likes||0)-1); likeCount.textContent=g.likes;
+        await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ likes:g.likes } });
+      }else{
+        g.dislikes=Math.max(0,(g.dislikes||0)-1);
+        await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ dislikes:g.dislikes } });
+      }
+    }else if(prev===null){
+      // No tenía voto -> insert
+      const ins = await rest("POST","/rest/v1/votes",{ body:{ user_id:currentUser.id, game_id:g.id, type }});
+      currentVote = ins?.[0] || null;
+      if(type==="like"){
+        g.likes=(g.likes||0)+1; likeCount.textContent=g.likes;
+        await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ likes:g.likes } });
+      }else{
+        g.dislikes=(g.dislikes||0)+1;
+        await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ dislikes:g.dislikes } });
+      }
+    }else{
+      // Cambiar voto
+      if(currentVote?.id){
+        const upd = await rest("PATCH","/rest/v1/votes",{ query:{ id:`eq.${currentVote.id}` }, body:{ type }});
+        currentVote = upd?.[0] || null;
+      }else{
+        const ins2 = await rest("POST","/rest/v1/votes",{ body:{ user_id:currentUser.id, game_id:g.id, type }});
+        currentVote = ins2?.[0] || null;
+      }
+      if(type==="like"){
+        g.likes=(g.likes||0)+1; likeCount.textContent=g.likes;
+        g.dislikes=Math.max(0,(g.dislikes||0)-1);
+        await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ likes:g.likes, dislikes:g.dislikes } });
+      }else{
+        g.dislikes=(g.dislikes||0)+1;
+        g.likes=Math.max(0,(g.likes||0)-1); likeCount.textContent=g.likes;
+        await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${g.id}` }, body:{ likes:g.likes, dislikes:g.dislikes } });
+      }
+    }
+  }catch(e){
+    console.warn("vote error", e);
+    alert("No se pudo registrar el voto (RLS/políticas).");
+  }finally{
+    syncVoteButtons();
+  }
+}
+
+/* ========= Visitas al JUGAR + Overlay con fallback ========= */
+playBtn.onclick = async ()=>{
+  if(!currentGame) return;
+  document.body.style.overflow="hidden";
+  overlayTitle.textContent = (currentGame.title || "Jugando…") + " · cargando…";
+  playOverlay.classList.remove("hidden");
+
+  // Cargar juego (interactuable)
+  let loaded = false;
+  playFrame.onload = () => {
+    loaded = true;
+    overlayTitle.textContent = currentGame.title || "Jugando…";
+  };
+  playFrame.srcdoc = srcdocSafe(currentGame.code);
+
+  // Fallback si no cargó en 1500ms
+  setTimeout(() => {
+    if (loaded) return;
+    overlayTitle.textContent = (currentGame.title || "Jugando…") + " · no se pudo iniciar";
+    try {
+      const blob = new Blob([currentGame.code || ""], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const ok = confirm("El juego no se pudo iniciar en el embed. ¿Abrir en una pestaña nueva?");
+      if (ok) window.open(url, "_blank");
+    } catch {}
+  }, 1500);
+
+  // Contar visita (solo al jugar)
+  try{
+    const updated = await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${currentGame.id}` }, body:{ visits:(currentGame.visits||0)+1 } });
+    if(updated?.[0]){ currentGame.visits=updated[0].visits; visitCount.textContent=currentGame.visits; }
+  }catch(_){}
+};
+overlayClose.onclick = ()=>{
+  playOverlay.classList.add("hidden");
+  playFrame.srcdoc="";
+  document.body.style.overflow="";
+};
+
+/* ========= Eliminar juego ========= */
+deleteGameBtn.onclick = async ()=>{
+  if(!currentUser || !currentGame) return;
+  const g=currentGame;
+  const canDelete = (currentUser.id===g.creator_id) || isAdmin();
+  if(!canDelete){ alert("No tienes permisos para borrar este juego."); return; }
+  if(!confirm(`¿Eliminar "${g.title||'este juego'}"?`)) return;
+  try{
+    await rest("DELETE","/rest/v1/games",{ query:{ id:`eq.${g.id}` } });
+    // quitar local
+    allGames = allGames.filter(x=>x.id!==g.id);
+    setView("home"); renderHome();
+  }catch(e){
+    alert("No se pudo eliminar (RLS). Si eres admin y falla, ajusta políticas de DELETE en public.games");
+  }
+};
+
+/* ========= Perfil ========= */
 async function openProfile(userId){
   viewingUserId=userId; setView("profile");
   let nickTxt="Usuario";
@@ -457,19 +605,20 @@ async function openProfile(userId){
     const noDiv=document.createElement("div"); noDiv.className="metaMuted"; noDiv.style.textAlign="center"; noDiv.style.padding="12px"; noDiv.textContent=txt;
     userGamesGrid.appendChild(noDiv);
   }else{
-    for(const g of mine){
-      const card=document.createElement("div"); card.className="gameCard";
+    mine.forEach((g,i)=>{
+      const card=document.createElement("div"); card.className="gameCard"; card.style.animationDelay=`${i*0.02}s`;
       card.innerHTML=`
         <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
         <iframe class="cardPreview" sandbox="allow-scripts" loading="lazy"></iframe>
         <div class="metaMuted">❤️ ${g.likes||0} · 👁️ ${g.visits||0}</div>`;
-        card.querySelector("iframe").srcdoc = srcdocSafe(g.code);
-        card.onclick=()=>openGame(g.id);
-        userGamesGrid.appendChild(card);
-    }
+      card.querySelector("iframe").srcdoc = srcdocSafe(g.code);
+      card.onclick=()=>openGame(g.id);
+      userGamesGrid.appendChild(card);
+    });
   }
 }
 backHomeBtn.onclick=()=>setView("home");
+backHomeFromGame.onclick=()=>setView("home");
 
 /* ========= Upload ========= */
 const MAX_BYTES=1048576;
@@ -496,7 +645,13 @@ submitGameBtn.onclick=async()=>{
   if(bytesOf(code)>MAX_BYTES){ alert("Tu juego supera 1 MB."); return; }
   try{
     const inserted = await rest("POST","/rest/v1/games",{ body:{ creator_id:currentUser.id, title, description, code, likes:0, dislikes:0, visits:0 } });
-    const game = inserted?.[0]; if(game){ game.creator_name = currentUser.user_metadata?.nickname||currentUser.email; allGames.unshift(game); renderHome(); openGame(game.id); }
+    const game = inserted?.[0];
+    if(game){
+      game.creator_name = currentUser.user_metadata?.nickname||currentUser.email;
+      allGames.unshift(game);
+      renderHome();
+      openGame(game.id);
+    }
   }catch(e){ alert("No se pudo subir el juego. Revisa RLS: "+(e.message||e)); }
 };
 
@@ -507,12 +662,13 @@ submitGameBtn.onclick=async()=>{
     try{
       await ensureFreshToken();
       currentUser = session.user;
-      setTopbarUser(currentUser);
+      const nick=currentUser?.user_metadata?.nickname||currentUser?.email||"Usuario";
+      userAvatar.textContent=(nick[0]||"?").toUpperCase();
+      userNameTop.textContent=nick;
       showApp();
       await loadGames();
     }catch{
-      clearSession();
-      showAuth();
+      clearSession(); showAuth();
     }
   }else{
     showAuth();
