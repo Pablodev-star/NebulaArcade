@@ -36,7 +36,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 .btn{border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;color:#2a2000;background:linear-gradient(90deg,var(--grad1),var(--grad2));transition:.15s}
 .btn:hover{background:linear-gradient(90deg,#ffa12b,#ffe04d);transform:translateY(-1px)}
 .error{color:#b91c1c;font-size:14px;margin-top:6px;text-align:center}
-.status{color:#2563eb;font-size:14px;margin-top:6px;text-align:center}
+.status{color:#2563eb;font-size:14px;margin-top:6px;text-align:center;white-space:pre-line}
 .loader{display:inline-block;width:16px;height:16px;border:3px solid #ffd24d;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .link{color:var(--muted);font-size:14px;text-decoration:underline;cursor:pointer;text-align:center;display:block;margin-top:12px}
@@ -191,9 +191,9 @@ function saveSession(session){
 function clearSavedSession(){ try{ localStorage.removeItem(NA_SESSION_KEY); }catch(_){} }
 
 async function restoreManualSessionIfNeeded(){
-  // Si Supabase no tiene sesión, intenta restaurar manualmente
-  const { data:{ session } } = await supabase.auth.getSession();
-  if(session) return; // ya hay sesión
+  const resp = await supabase.auth.getSession();
+  const have = resp?.data?.session;
+  if(have) return;
   try{
     const raw = localStorage.getItem(NA_SESSION_KEY);
     if(!raw) return;
@@ -248,6 +248,28 @@ function bytesOf(str){ return new Blob([str||""]).size; }
 function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</body></html>"; }
 function nic(s){ return (s||"").trim(); }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* -------------------- Diagnóstico activo -------------------- */
+async function diagnoseConnectivity(labelEl){
+  try{
+    const headers={ apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` };
+    const rest = await fetch(`${SUPA_URL}/rest/v1/?select=now()`, { headers });
+    const auth = await fetch(`${SUPA_URL}/auth/v1/health`, { headers });
+    const lines = [
+      `🔎 Diagnóstico:`,
+      `REST now(): ${rest.status}`,
+      `AUTH health: ${auth.status}`
+    ];
+    // Heurística simple
+    if(rest.status===0 || auth.status===0){ lines.push("→ Posible bloqueo de red/extensión."); }
+    if(rest.status===403 || auth.status===403){ lines.push("→ CORS o dominio no permitido en Supabase."); }
+    if(rest.status===401 || auth.status===401){ lines.push("→ Revisa tu anon key / proyecto."); }
+    labelEl.textContent = lines.join("\n");
+  }catch(e){
+    labelEl.textContent = "Diagnóstico: no se pudo conectar (red/CORS/extensión).";
+  }
+}
 
 /* -------------------- Auth -------------------- */
 showSignup.onclick=()=>{loginForm.classList.add("hidden");signupForm.classList.remove("hidden");};
@@ -264,39 +286,83 @@ signupBtn.onclick=async()=>{
     const {data,error}=await supabase.auth.signUp({email,password:pass,options:{data:{nickname}}});
     signupStatus.classList.add("hidden");
     if(error){ signupError.textContent="Error: "+error.message; return;}
-    // Mostrar instrucción de verificación
     signupError.style.color="#2563eb";
     signupError.textContent="📧 Te enviamos un email de verificación. Abre el enlace para entrar (revisa SPAM).";
   }catch(e){ signupError.textContent="Error inesperado: "+e.message; signupStatus.classList.add("hidden"); }
 };
 
+/* -------- Login con reintentos + timeout y explicación -------- */
+const LOGIN_MAX_ATTEMPTS = 3;
+const LOGIN_TIMEOUT_MS = 8000;
+
+async function signInWithTimeout(email, pass){
+  let timer;
+  const timeoutP = new Promise((_,rej)=>{
+    timer = setTimeout(()=>rej(new Error("TIMEOUT")), LOGIN_TIMEOUT_MS);
+  });
+  try{
+    const result = await Promise.race([
+      supabase.auth.signInWithPassword({ email, password: pass }),
+      timeoutP
+    ]);
+    return result;
+  } finally { clearTimeout(timer); }
+}
+
 loginBtn.onclick=async()=>{
   const email=nic(loginEmail.value), pass=loginPass.value;
   loginError.textContent=""; loginStatus.textContent=""; loginStatus.classList.remove("hidden");
   if(!email||!pass){ loginError.textContent="Rellena ambos campos."; loginStatus.classList.add("hidden"); return;}
-  loginStatus.innerHTML='<span class="loader"></span>Verificando credenciales...';
-  try{
-    const {data,error}=await supabase.auth.signInWithPassword({email,password:pass});
-    loginStatus.classList.add("hidden");
-    if(error){
-      if(error.message.includes("Invalid login credentials")) loginError.textContent="❌ Credenciales incorrectas.";
-      else loginError.textContent="⚠️ "+error.message;
-      return;
+  loginBtn.disabled=true;
+
+  let lastErrMsg = "";
+  for(let attempt=1; attempt<=LOGIN_MAX_ATTEMPTS; attempt++){
+    loginStatus.textContent = `🔐 Verificando credenciales… (intento ${attempt}/${LOGIN_MAX_ATTEMPTS})`;
+    try{
+      const { data, error } = await signInWithTimeout(email, pass);
+      if(error){
+        lastErrMsg = error.message || String(error);
+        if(error.message?.includes("Invalid login credentials")){
+          loginStatus.classList.add("hidden");
+          loginError.textContent = "❌ Credenciales incorrectas.";
+          loginBtn.disabled=false;
+          return;
+        }
+        // Otro error (p. ej. red temporal). Sigue a reintento.
+      }else if(data?.user){
+        loginStatus.textContent = "✅ Sesión iniciada. Cargando…";
+        await loadUser(); showApp(); loadGames();
+        loginStatus.classList.add("hidden");
+        loginBtn.disabled=false;
+        return;
+      }else{
+        lastErrMsg = "Respuesta sin usuario.";
+      }
+    }catch(e){
+      lastErrMsg = (e.message==="TIMEOUT") ? "Tiempo de espera agotado." : (e.message||"Error desconocido");
+      loginStatus.textContent = `⚠️ ${lastErrMsg} (intento ${attempt}/${LOGIN_MAX_ATTEMPTS})`;
     }
-    if(!data?.user){ loginError.textContent="⚠️ No se recibió usuario en la respuesta."; return;}
-    await loadUser(); showApp(); loadGames();
-  }catch(e){ loginError.textContent="Error inesperado: "+e.message; loginStatus.classList.add("hidden"); }
+    if(attempt<LOGIN_MAX_ATTEMPTS){
+      await sleep(800*attempt); // backoff suave
+    }
+  }
+
+  // Si llegó aquí, los 3 intentos fallaron
+  loginBtn.disabled=false;
+  loginError.textContent = `No se pudo iniciar sesión tras ${LOGIN_MAX_ATTEMPTS} intentos.\nÚltimo error: ${lastErrMsg || "desconocido"}`;
+  loginStatus.classList.remove("hidden");
+  await diagnoseConnectivity(loginStatus);
 };
 
 /* -------------------- Session & persist extra -------------------- */
-supabase.auth.onAuthStateChange(async (event, session)=>{
-  // guarda/borra manualmente
+supabase.auth.onAuthStateChange(async (_event, session)=>{
   if(session){ saveSession(session); } else { clearSavedSession(); }
   if(session){ await loadUser(); showApp(); loadGames(); } else { showAuth(); }
 });
 
 async function loadUser(){
-  const {data:{user}}=await supabase.auth.getUser();
+  const resp = await supabase.auth.getUser();
+  const user = resp?.data?.user || null;
   if(!user){ showAuth(); return;}
   currentUser=user;
   const nickn=user.user_metadata?.nickname||user.email;
@@ -319,9 +385,9 @@ function setView(v){
 /* -------------------- Dropdown -------------------- */
 userBtn.onclick=()=>{ dropdown.style.display = (dropdown.style.display==="flex")?"none":"flex"; dropdown.style.flexDirection="column"; };
 window.addEventListener("click",(e)=>{ if(!userMenu.contains(e.target)) closeDropdown(); });
-$("viewProfileBtn").onclick=()=>{ if(currentUser) openProfile(currentUser.id); closeDropdown(); };
-$("logoutBtn").onclick=async()=>{ await supabase.auth.signOut(); clearSavedSession(); closeDropdown(); };
-$("deleteBtn").onclick=async()=>{
+viewProfileBtn.onclick=()=>{ if(currentUser) openProfile(currentUser.id); closeDropdown(); };
+logoutBtn.onclick=async()=>{ await supabase.auth.signOut(); clearSavedSession(); closeDropdown(); };
+deleteBtn.onclick=async()=>{
   if(!currentUser) return;
   if(!confirm("¿Seguro que quieres ELIMINAR tu cuenta y todos tus juegos?")) return;
   try{
@@ -459,7 +525,6 @@ backHomeBtn.onclick=()=>setView("home");
 
 /* -------------------- Upload (+) -------------------- */
 const MAX_BYTES=1048576;
-const fab=$("fab");
 fab.onclick=()=>{ openUpload(); };
 function openUpload(){
   if(!currentUser){ alert("Inicia sesión para subir juegos."); return; }
@@ -508,25 +573,39 @@ submitGameBtn.onclick=async()=>{
 };
 
 /* -------------------- FAB visibility -------------------- */
-function updateFab(){ fab.classList.toggle("hidden", !currentUser || !homeView || homeView.classList.contains("hidden")); }
+function updateFab(){
+  const showFab = !!currentUser && !homeView.classList.contains("hidden");
+  fab.classList.toggle("hidden", !showFab);
+}
 
 /* -------------------- Init -------------------- */
 (async function init(){
-  // 1) Intenta restaurar manualmente si hace falta
-  await restoreManualSessionIfNeeded();
+  try {
+    await restoreManualSessionIfNeeded();
+    const sessionResp = await supabase.auth.getSession();
+    const activeSession = sessionResp && sessionResp.data ? sessionResp.data.session : null;
 
-  // 2) Luego consulta la sesión y pinta la vista correcta
-  const {data:{session}} = await supabase.auth.getSession();
-  if(session){ await loadUser(); showApp(); loadGames(); } else { showAuth(); }
+    if (activeSession) {
+      await loadUser();
+      showApp();
+      loadGames();
+    } else {
+      showAuth();
+    }
 
-  // 3) Observa cambios de vista para FAB
-  const obs = new MutationObserver(updateFab);
-  obs.observe(homeView,{attributes:true,attributeFilter:["class"]});
+    const obs = new MutationObserver(updateFab);
+    obs.observe(homeView, { attributes: true, attributeFilter: ["class"] });
 
-  // 4) Cerrar menú al pulsar opción
-  ["viewProfileBtn","logoutBtn","deleteBtn"].forEach(id=>{
-    const el=$(id); if(el) el.addEventListener("click", ()=>closeDropdown());
-  });
+    ["viewProfileBtn", "logoutBtn", "deleteBtn"].forEach(id => {
+      const el = $(id);
+      if (el) el.addEventListener("click", () => closeDropdown());
+    });
+
+    console.log("✅ Nebula Arcade iniciado.");
+  } catch (err) {
+    console.error("❌ Error en init:", err);
+    showAuth();
+  }
 })();
 </script>
 </body>
