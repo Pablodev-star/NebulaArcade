@@ -298,19 +298,35 @@ function loadSession(){ try{session=JSON.parse(localStorage.getItem(SESSION_KEY)
 function saveSession(s){ session=s; localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
 function clearSession(){ session=null; localStorage.removeItem(SESSION_KEY); }
 
-async function ensureFreshToken(){
-  if(!session) return;
-  const now = Math.floor(Date.now()/1000);
-  if(session.expires_at && session.expires_at - now > 60) return;
-  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json", apikey:SUPA_KEY, Authorization:`Bearer ${SUPA_KEY}` },
+async function ensureFreshToken() {
+  if (!session) return;
+  const now = Math.floor(Date.now() / 1000);
+  if (session.expires_at && session.expires_at - now > 60) return;
+
+  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPA_KEY,
+      Authorization: `Bearer ${SUPA_KEY}`
+    },
     body: JSON.stringify({ refresh_token: session.refresh_token })
   });
-  const data = await res.json().catch(()=>null);
-  if(!res.ok || !data?.access_token) throw new Error("No se pudo refrescar token");
-  const expires_at = now + (data.expires_in||3600);
-  saveSession({ access_token:data.access_token, refresh_token:data.refresh_token||session.refresh_token, expires_at, user: session.user });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.access_token) throw new Error("No se pudo refrescar token");
+
+  const expires_at = now + (data.expires_in || 3600);
+
+  // 🔧 Mantener SIEMPRE el refresh_token anterior si no viene nuevo
+  const newRefresh = data.refresh_token ? data.refresh_token : session.refresh_token;
+
+  saveSession({
+    access_token: data.access_token,
+    refresh_token: newRefresh,
+    expires_at,
+    user: session.user
+  });
 }
 async function rest(method, path, { query=null, body=null }={}){
   await ensureFreshToken();
