@@ -69,7 +69,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 /* Perfil */
 .profileView{max-width:700px;margin:0 auto}
 .profileHeader{text-align:center;margin-bottom:16px}
-.profileAvatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:40px;margin:0 auto 10px;box-shadow:0 10px 22px rgba(255,138,0,.25);overflow:hidden}
+.profileAvatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--grad1),var(--grad2));display:flex;align-items:center;justify-content:center;color:#2a2000;font-family:"Fredoka One";font-size:40px;margin:0 auto 10px;box-shadow:0 10px 22px rgba(0,0,0,.25);overflow:hidden}
 .profileAvatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .stats{display:flex;justify-content:center;gap:40px;margin:12px 0;color:var(--muted)}
 
@@ -214,7 +214,7 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
 
   <!-- GAME PAGE -->
   <div id="gameView" class="hidden gamePage">
-    <!-- PREVIEW SILENCIADO (allow deshabilita autoplay/mic/cam) -->
+    <!-- PREVIEW SILENCIADO -->
     <iframe id="gamePreview" class="previewLarge" sandbox="allow-scripts allow-same-origin" allow="autoplay 'none'; microphone 'none'; camera 'none'"></iframe>
     <div class="gameHeader">
       <h2 id="gameTitle">Nombre del juego</h2>
@@ -251,7 +251,6 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
       <span class="counter" id="byteCounter">0 / 1,048,576 bytes</span>
     </div>
     <textarea id="codeEditor" class="editor" placeholder="Pega o escribe tu HTML + CSS + JS aquí (todo en uno)"></textarea>
-    <!-- PREVIEW SILENCIADO -->
     <iframe id="codePreview" class="previewEdit hidden" sandbox="allow-scripts allow-same-origin" allow="autoplay 'none'; microphone 'none'; camera 'none'"></iframe>
     <div class="row" style="margin-top:12px;justify-content:center;">
       <button id="submitGameBtn" class="btn" type="button">Subir juego</button>
@@ -298,43 +297,55 @@ function loadSession(){ try{session=JSON.parse(localStorage.getItem(SESSION_KEY)
 function saveSession(s){ session=s; localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
 function clearSession(){ session=null; localStorage.removeItem(SESSION_KEY); }
 
+// ---------- REFRESH ROBUSTO ----------
 async function ensureFreshToken() {
-  if (!session) return;
+  if (!session) return false;
   const now = Math.floor(Date.now() / 1000);
-  if (session.expires_at && session.expires_at - now > 60) return;
+  if (session.expires_at && session.expires_at - now > 60) return true;
 
-  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: SUPA_KEY,
-      Authorization: `Bearer ${SUPA_KEY}`
-    },
-    body: JSON.stringify({ refresh_token: session.refresh_token })
-  });
+  // FIX: si no hay refresh_token, no intentes refrescar ni lances error
+  if (!session.refresh_token) return false;
 
-  const data = await res.json().catch(() => null);
-  if (!res.ok || !data?.access_token) throw new Error("No se pudo refrescar token");
+  try{
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPA_KEY,
+        Authorization: `Bearer ${SUPA_KEY}`
+      },
+      body: JSON.stringify({ refresh_token: session.refresh_token })
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.access_token) return false;
 
-  const expires_at = now + (data.expires_in || 3600);
-
-  // 🔧 Mantener SIEMPRE el refresh_token anterior si no viene nuevo
-  const newRefresh = data.refresh_token ? data.refresh_token : session.refresh_token;
-
-  saveSession({
-    access_token: data.access_token,
-    refresh_token: newRefresh,
-    expires_at,
-    user: session.user
-  });
+    const expires_at = now + (data.expires_in || 3600);
+    const newRefresh = data.refresh_token ? data.refresh_token : session.refresh_token; // FIX: conserva el anterior
+    saveSession({
+      access_token: data.access_token,
+      refresh_token: newRefresh,
+      expires_at,
+      user: session.user
+    });
+    return true;
+  }catch(_){
+    // FIX: no propagues fallo de red/refresh para no provocar logout instantáneo
+    return false;
+  }
 }
+
+// ---------- REST GENÉRICO ----------
 async function rest(method, path, { query=null, body=null }={}){
-  await ensureFreshToken();
+  // FIX: intenta refrescar SOLO para endpoints REST/Storage (no /auth)
+  if (path.startsWith("/rest/") || path.startsWith("/storage/")) {
+    try { await ensureFreshToken(); } catch {}
+  }
   const qs = query ? "?"+new URLSearchParams(query).toString() : "";
   const res = await fetch(`${SUPA_URL}${path}${qs}`,{
     method,
     headers:{
       apikey: SUPA_KEY,
+      // FIX: si hay sesión, usa su access_token; si no, usa anon key
       Authorization: session? `Bearer ${session.access_token}` : `Bearer ${SUPA_KEY}`,
       "Content-Type":"application/json",
       "Prefer":"return=representation"
@@ -346,11 +357,15 @@ async function rest(method, path, { query=null, body=null }={}){
   if(!res.ok) throw new Error(json?.message || json?.error_description || json?.msg || `HTTP ${res.status}`);
   return json;
 }
+
 async function signUp(email,password,nickname){
+  // (no usa ensureFreshToken)
   return rest("POST","/auth/v1/signup",{ body:{ email, password, data:{ nickname } } });
 }
+
 async function login(email,password){
   const now=Math.floor(Date.now()/1000);
+  // (no usa ensureFreshToken)
   const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`,{
     method:"POST",
     headers:{ "Content-Type":"application/json", apikey:SUPA_KEY, Authorization:`Bearer ${SUPA_KEY}` },
@@ -358,12 +373,22 @@ async function login(email,password){
   });
   const data = await res.json().catch(()=>null);
   if(!res.ok || !data?.access_token) throw new Error(data?.error_description || "No se pudo iniciar sesión");
+
+  // Obtén el usuario con el access_token recibido
   const ures = await fetch(`${SUPA_URL}/auth/v1/user`,{ headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${data.access_token}` }});
   const user = await ures.json().catch(()=>null);
   if(!ures.ok) throw new Error("No se pudo obtener el usuario");
+
+  // FIX: tolera que algunos flujos no devuelvan refresh_token
   const expires_at = now + (data.expires_in||3600);
-  saveSession({ access_token:data.access_token, refresh_token:data.refresh_token, expires_at, user });
+  saveSession({
+    access_token:data.access_token,
+    refresh_token:(data.refresh_token||null),
+    expires_at,
+    user
+  });
 }
+
 async function logout(){
   if(session){
     try{
@@ -429,12 +454,11 @@ function closeDropdown(){ dropdown.style.display="none"; }
 function bytesOf(str){ return new Blob([str||""]).size; }
 function nic(s){ return (s||"").trim(); }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
-function isAdmin(){ return (currentUser?.email||"").toLowerCase()===NEBULA_EMAIL_LOWER; } /* tú eres admin */
+function isAdmin(){ return (currentUser?.email||"").toLowerCase()===NEBULA_EMAIL_LOWER; }
 function formatDate(d){ try{ return new Date(d).toLocaleDateString('es-ES'); }catch{ return '—'; } }
 
 /* srcdoc helpers */
 function srcdocSafe(html){ return html || "<!doctype html><html><body>Empty</body></html>"; }
-/* SILENCIO TOTAL para previews (bloquea WebAudio + media.play) */
 function srcdocSilent(html){
   const silence=`<script>(function(){try{
     const OldAC = window.AudioContext||window.webkitAudioContext;
@@ -445,7 +469,7 @@ function srcdocSilent(html){
   return (silence + (html||""));
 }
 
-/* Avatares: Nebula o inicial */
+/* Avatares */
 function avatarHTMLByEmail(email, initial, sizePx){
   const isNeb = (email||"").toLowerCase()===NEBULA_EMAIL_LOWER;
   if(isNeb){
@@ -524,7 +548,7 @@ function setTopbarUser(u){
   }else{
     userAvatar.textContent=(nick[0]||"?").toUpperCase();
   }
-  deleteBtn.style.display=(nick.toLowerCase()===NEBULA_NICK_LOWER)?"block":"none"; /* legado */
+  deleteBtn.style.display=(nick.toLowerCase()===NEBULA_NICK_LOWER)?"block":"none";
 }
 function showAuth(){authView.classList.remove("hidden");appView.classList.add("hidden");topbar.classList.add("hidden");}
 function showApp(){authView.classList.add("hidden");appView.classList.remove("hidden");topbar.classList.remove("hidden"); setView("home");}
@@ -688,7 +712,7 @@ async function openGame(id){
   const g=allGames.find(x=>x.id===id); if(!g) return;
   currentGame = g; currentVote=null;
   setView("game");
-  attachSilentSrcdoc(gamePreview, g.code); // PREVIEW SILENCIADO
+  attachSilentSrcdoc(gamePreview, g.code);
   gameTitle.textContent=g.title||"Sin título";
   gameDesc.textContent=g.description||"";
   likeCount.textContent=g.likes||0; visitCount.textContent=g.visits||0;
@@ -696,7 +720,6 @@ async function openGame(id){
   gameCreator.textContent=g.creator_name||"Usuario";
   gameCreator.onclick=()=>openProfile(g.creator_id);
 
-  // Avatar del creador (Nebula si aplica)
   const isNebCreator = ((g.creator_email||"").toLowerCase()===NEBULA_EMAIL_LOWER) || nebulaIds.has(g.creator_id);
   if(isNebCreator){
     gameCreatorAvatar.innerHTML = `<img src="${NEBULA_LOGO_URL}" alt="Nebula Glow">`;
@@ -708,7 +731,6 @@ async function openGame(id){
   deleteGameBtn.classList.toggle("hidden", !canEditDelete);
   editGameBtn.classList.toggle("hidden", !canEditDelete);
 
-  // Mostrar sección de dislikes solo al creador/admin
   const isCreator = currentUser && (currentUser.id===g.creator_id || isAdmin());
   dislikeSection.classList.toggle("hidden", !isCreator);
   $("dislikeCount").textContent = g.dislikes||0;
@@ -730,14 +752,14 @@ function syncVoteButtons(){
 likeBtn.onclick = ()=>handleVote("like");
 dislikeBtn.onclick = ()=>handleVote("dislike");
 
-/* Ver lista de votantes (solo si eres el creador/admin, silencioso si no) */
+/* Ver lista de votantes (solo si eres el creador/admin) */
 likeCount.onclick = ()=> showVoters("like");
 dislikeCount.onclick = ()=> showVoters("dislike");
 
 async function showVoters(type){
   if(!currentUser || !currentGame) return;
   const canView = (currentUser.id===currentGame.creator_id) || isAdmin();
-  if(!canView) return; // nada si no es creador
+  if(!canView) return;
 
   votersTitle.textContent = type==="like" ? "❤️ Usuarios que dieron Like" : "👎 Usuarios que dieron Dislike";
   votersList.innerHTML = '<div class="metaMuted">Cargando...</div>';
@@ -776,7 +798,7 @@ async function showVoters(type){
         <span class="miniAvatar">${showNebula?`<img src="${NEBULA_LOGO_URL}" alt="Nebula Glow">`:(name.charAt(0)||"U").toUpperCase()}</span>
         <span style="font-weight:700">${escapeHtml(name)}</span>
       `;
-      row.onclick=()=>{ votersModal.style.display="none"; openProfile(v.user_id); }; // ⬅️ cierra panel al ir al perfil
+      row.onclick=()=>{ votersModal.style.display="none"; openProfile(v.user_id); };
       votersList.appendChild(row);
     });
   }catch(e){
@@ -845,7 +867,7 @@ playBtn.onclick = async () => {
   document.body.style.overflow="hidden";
   playerFS.style.display="block";
   fsFrame.removeAttribute("allow"); // permitir sonido en el juego
-  fsFrame.srcdoc = srcdocSafe(currentGame.code); // AQUÍ SÍ hay audio
+  fsFrame.srcdoc = srcdocSafe(currentGame.code); // aquí sí hay audio
 
   try{
     const updated = await rest("PATCH","/rest/v1/games",{ query:{ id:`eq.${currentGame.id}` }, body:{ visits:(currentGame.visits||0)+1 } });
@@ -885,7 +907,6 @@ async function openProfile(userId){
       emailTxt=(arr[0].email||"");
     }
   }catch{
-    // fallback si no hay columna email
     const arr2 = await rest("GET","/rest/v1/profiles",{ query:{ select:"nickname", id:`eq.${userId}` } });
     if(arr2?.[0]) nickTxt=arr2[0].nickname||"Usuario";
   }
@@ -897,7 +918,6 @@ async function openProfile(userId){
     profileAvatar.textContent=(nickTxt[0]||"?").toUpperCase();
   }
 
-  // Mostrar controles de NICK solo si es tu propio perfil
   const isOwn = currentUser && currentUser.id===userId;
   profileSelfActions.classList.toggle("hidden", !isOwn);
   if(isOwn){
@@ -920,12 +940,10 @@ async function openProfile(userId){
         await updateMyNickname(newNick);
         profileName.textContent=newNick;
         setTopbarUser(currentUser);
-        // refrescar inicial del avatar si no es Nebula
         if(((currentUser.email||"").toLowerCase()!==NEBULA_EMAIL_LOWER)){
           profileAvatar.textContent=(newNick[0]||"?").toUpperCase();
           userAvatar.textContent=(newNick[0]||"?").toUpperCase();
         }
-        // Actualizar nombres en mis juegos ya cargados
         allGames.forEach(g=>{ if(g.creator_id===currentUser.id) g.creator_name=newNick; });
         applyFiltersAndRender(true);
         nickEditMsg.textContent="✅ Nickname actualizado.";
@@ -966,18 +984,15 @@ backHomeFromGame.onclick=()=>setView("home");
 /* Actualiza nickname en Auth y en perfiles (solo el propio) */
 async function updateMyNickname(newNick){
   if(!currentUser) throw new Error("Sin sesión");
-  // 1) Auth user_metadata
   const res = await fetch(`${SUPA_URL}/auth/v1/user`,{
     method:"PATCH",
     headers:{ apikey:SUPA_KEY, Authorization:`Bearer ${session.access_token}`, "Content-Type":"application/json" },
     body: JSON.stringify({ data:{ nickname: newNick } })
   });
   if(!res.ok) throw new Error("Auth update failed");
-  // Actualizar en memoria
   currentUser.user_metadata = { ...(currentUser.user_metadata||{}), nickname:newNick };
   session.user = currentUser; saveSession(session);
 
-  // 2) Tabla profiles (PATCH o POST si no existe)
   try{
     await rest("PATCH","/rest/v1/profiles",{ query:{ id:`eq.${currentUser.id}` }, body:{ nickname:newNick } });
   }catch{
@@ -1003,7 +1018,7 @@ function openUpload(isEditing=false, gameToEdit=null){
     gameNameIn.value=gameToEdit.title||"";
     gameDescIn.value=gameToEdit.description||"";
     codeEditor.value=gameToEdit.code||"";
-    attachSilentSrcdoc(codePreview, gameToEdit.code); // preview sin sonido
+    attachSilentSrcdoc(codePreview, gameToEdit.code);
     codePreview.classList.add("hidden");
     tabEdit.classList.add("active");
     tabPreview.classList.remove("active");
@@ -1050,7 +1065,7 @@ function tabTo(w){
   }else{
     tabPreview.classList.add("active");tabEdit.classList.remove("active");
     codeEditor.classList.add("hidden");codePreview.classList.remove("hidden");
-    attachSilentSrcdoc(codePreview, codeEditor.value); // siempre sin sonido en preview
+    attachSilentSrcdoc(codePreview, codeEditor.value);
   }
 }
 function updateByteCounter(){ const n=bytesOf(codeEditor.value); byteCounter.textContent=`${n.toLocaleString()} / ${MAX_BYTES.toLocaleString()} bytes`; }
@@ -1085,14 +1100,18 @@ editGameBtn.onclick = ()=> {
 (async function init(){
   loadSession();
   if(session){
+    // FIX: no limpies la sesión automáticamente si falla el refresh (evita “logout instantáneo”)
     try{
       await ensureFreshToken();
-      currentUser = session.user;
+    }catch{}
+    // si hay access_token válido, entra a la app
+    currentUser = session.user;
+    if (session?.access_token && currentUser){
       setTopbarUser(currentUser);
       showApp();
-      await loadGames();
-    }catch{
-      clearSession(); showAuth();
+      try{ await loadGames(); }catch{ gamesGrid.innerHTML="<div class='metaMuted'>No se pudieron cargar los juegos.</div>"; }
+    } else {
+      showAuth();
     }
   }else{
     showAuth();
