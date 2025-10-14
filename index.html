@@ -188,6 +188,15 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
     <div class="profileHeader">
       <div class="profileAvatar" id="profileAvatar">?</div>
       <h2 id="profileName">Usuario</h2>
+      <div id="nickEditor" style="margin:10px 0;text-align:center;">
+        <button id="editNickBtn" class="btn" type="button" style="display:none;">✏️ Cambiar nickname</button>
+        <div id="nickEditBox" class="hidden" style="margin-top:8px;"> 
+    <input id="newNickInput" type="text" placeholder="Nuevo nickname" style="padding:8px 10px;border-radius:8px;border:1px solid #ddd;">
+    <button id="saveNickBtn" class="btn" type="button">💾 Guardar</button>
+    <button id="cancelNickBtn" class="btn" type="button" style="background:#eee;color:#222;">Cancelar</button>
+    <div id="nickMsg" class="status" style="margin-top:6px;"></div>
+    </div>
+    </div>
       <div class="stats">
         <div>❤️ <span id="likesCount">0</span> Likes</div>
         <div>👁️ <span id="visitsCount">0</span> Visitas</div>
@@ -600,7 +609,7 @@ function applyFiltersAndRender(reset){
       <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
       <iframe class="cardPreview" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>
       <div class="metaMuted">${miniAvatarMarkupForGame(g)}Por ${escapeHtml(g.creator_name)} · ❤️ ${g.likes||0} · 👁️ ${g.visits||0}</div>`;
-    card.querySelector("iframe").srcdoc = srcdocSafe(g.code);
+    card.querySelector("iframe").srcdoc = srcdocSafe(mutePreview(g.code||""));
     card.onclick=()=>openGame(g.id);
     gamesGrid.appendChild(card);
   });
@@ -631,7 +640,7 @@ async function openGame(id){
   const g=allGames.find(x=>x.id===id); if(!g) return;
   currentGame = g; currentVote=null;
   setView("game");
-  gamePreview.srcdoc = srcdocSafe(g.code);
+  gamePreview.srcdoc = srcdocSafe(mutePreview(g.code||""));
   gameTitle.textContent=g.title||"Sin título";
   gameDesc.textContent=g.description||"";
   likeCount.textContent=g.likes||0; visitCount.textContent=g.visits||0;
@@ -719,7 +728,10 @@ async function showVoters(type){
         <span class="miniAvatar">${showNebula?`<img src="${NEBULA_LOGO_URL}" alt="Nebula Glow">`:(name.charAt(0)||"U").toUpperCase()}</span>
         <span style="font-weight:700">${escapeHtml(name)}</span>
       `;
-      row.onclick=()=>openProfile(v.user_id);
+      row.onclick=()=>{
+        votersModal.style.display="none";
+        openProfile(v.user_id);
+      };
       votersList.appendChild(row);
     });
   }catch(e){
@@ -818,6 +830,7 @@ deleteGameBtn.onclick = async ()=>{
 
 /* ========= Perfil ========= */
 async function openProfile(userId){
+  toggleNickEditor(userId);
   viewingUserId=userId; setView("profile");
   let nickTxt="Usuario", emailTxt="";
   try{
@@ -855,7 +868,7 @@ async function openProfile(userId){
         <div class="cardTitle">${escapeHtml(g.title||"Sin título")}</div>
         <iframe class="cardPreview" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>
         <div class="metaMuted">${miniAvatarMarkupForGame(g)}❤️ ${g.likes||0} · 👁️ ${g.visits||0}</div>`;
-      card.querySelector("iframe").srcdoc = srcdocSafe(g.code);
+      card.querySelector("iframe").srcdoc = srcdocSafe(mutePreview(g.code||""));
       card.onclick=()=>openGame(g.id);
       userGamesGrid.appendChild(card);
     });
@@ -957,6 +970,86 @@ editGameBtn.onclick = ()=> {
   const g=currentGame;
   openUpload(true, g);
 };
+
+  // === Cambio de nickname ===
+const editNickBtn = $("editNickBtn");
+const nickEditBox = $("nickEditBox");
+const newNickInput = $("newNickInput");
+const saveNickBtn = $("saveNickBtn");
+const cancelNickBtn = $("cancelNickBtn");
+const nickMsg = $("nickMsg");
+
+function toggleNickEditor(userId){
+  if(currentUser && currentUser.id === userId){
+    editNickBtn.style.display="inline-block";
+  }else{
+    editNickBtn.style.display="none";
+    nickEditBox.classList.add("hidden");
+  }
+}
+
+editNickBtn.onclick = ()=>{
+  editNickBtn.style.display="none";
+  nickEditBox.classList.remove("hidden");
+  newNickInput.value = profileName.textContent || "";
+  nickMsg.textContent="";
+};
+
+cancelNickBtn.onclick = ()=>{
+  editNickBtn.style.display="inline-block";
+  nickEditBox.classList.add("hidden");
+  nickMsg.textContent="";
+};
+
+saveNickBtn.onclick = async ()=>{
+  const newNick = (newNickInput.value||"").trim();
+  if(!newNick){ nickMsg.textContent="Pon un nickname válido."; return; }
+  nickMsg.innerHTML='<span class="loader"></span> Guardando...';
+  try{
+    // Actualiza tabla perfiles
+    await rest("PATCH","/rest/v1/profiles",{ query:{ id:`eq.${currentUser.id}` }, body:{ nickname:newNick }});
+    // Actualiza auth user_metadata.nickname
+    await fetch(`${SUPA_URL}/auth/v1/user`,{
+      method:"PATCH",
+      headers:{
+        apikey:SUPA_KEY,
+        "Content-Type":"application/json",
+        Authorization:`Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ data:{ nickname:newNick } })
+    });
+    // Refresca UI
+    profileName.textContent=newNick;
+    userNameTop.textContent=newNick;
+    nickMsg.textContent="✅ Nickname cambiado";
+    setTimeout(()=>{
+      editNickBtn.style.display="inline-block";
+      nickEditBox.classList.add("hidden");
+      nickMsg.textContent="";
+    },800);
+  }catch(e){
+    nickMsg.textContent="❌ Error: "+(e.message||e);
+  }
+};
+
+  function mutePreview(html){
+  const patch = `
+  <script>
+  (function(){
+    function hush(){
+      document.querySelectorAll('audio,video').forEach(m=>{
+        try{m.muted=true;m.volume=0;m.pause();}catch(_){}
+      });
+    }
+    hush();
+    new MutationObserver(hush).observe(document.body,{childList:true,subtree:true});
+    setInterval(hush,700);
+    window.AudioContext=function(){throw new Error('Audio bloqueado');};
+    window.webkitAudioContext=function(){throw new Error('Audio bloqueado');};
+  })();
+  </script>`;
+  return html.replace("</body>", patch+"</body>");
+}
 
 /* ========= Init ========= */
 (async function init(){
