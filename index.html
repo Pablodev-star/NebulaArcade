@@ -199,7 +199,6 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
         <div>❤️ <span id="likesCount">0</span> Likes</div>
         <div>👁️ <span id="visitsCount">0</span> Visitas</div>
       </div>
-    </div>
     <h3 style="text-align:center;margin-bottom:8px;">Juegos subidos</h3>
     <div class="gamesGrid" id="userGamesGrid"></div>
     <div style="text-align:center;margin-top:16px;">
@@ -854,6 +853,8 @@ async function openProfile(userId){
     const arr2 = await rest("GET","/rest/v1/profiles",{ query:{ select:"nickname", id:`eq.${userId}` } });
     if(arr2?.[0]) nickTxt=arr2[0].nickname||"Usuario";
   }
+
+  toggleNickEditor(userId);
   profileName.textContent=nickTxt;
   const isNeb = (emailTxt||"").toLowerCase()===NEBULA_EMAIL_LOWER || nebulaIds.has(userId);
   if(isNeb){
