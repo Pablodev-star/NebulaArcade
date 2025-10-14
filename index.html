@@ -1033,22 +1033,22 @@ saveNickBtn.onclick = async ()=>{
 };
 
   function mutePreview(html){
-  const patch = `
-  <script>
-  (function(){
-    function hush(){
-      document.querySelectorAll('audio,video').forEach(m=>{
-        try{m.muted=true;m.volume=0;m.pause();}catch(_){}
-      });
-    }
-    hush();
-    new MutationObserver(hush).observe(document.body,{childList:true,subtree:true});
-    setInterval(hush,700);
-    window.AudioContext=function(){throw new Error('Audio bloqueado');};
-    window.webkitAudioContext=function(){throw new Error('Audio bloqueado');};
-  })();
-  </script>`;
-  return html.replace("</body>", patch+"</body>");
+  const patch = String.raw`
+<script>
+(function(){
+  function hush(){
+    document.querySelectorAll('audio,video').forEach(m=>{
+      try{m.muted=true;m.volume=0;m.pause();}catch(_){}
+    });
+  }
+  hush();
+  new MutationObserver(hush).observe(document.body,{childList:true,subtree:true});
+  setInterval(hush,700);
+  window.AudioContext=function(){throw new Error('Audio bloqueado');};
+  window.webkitAudioContext=function(){throw new Error('Audio bloqueado');};
+})();
+<\/script>`;
+  return html.replace("</body>", patch + "</body>");
 }
 
 /* ========= Init ========= */
