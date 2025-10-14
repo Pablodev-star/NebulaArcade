@@ -486,10 +486,22 @@ function setTopbarUser(u){
 function showAuth(){authView.classList.remove("hidden");appView.classList.add("hidden");topbar.classList.add("hidden");}
 function showApp(){authView.classList.add("hidden");appView.classList.remove("hidden");topbar.classList.remove("hidden"); setView("home");}
 function setView(v){
-  homeView.classList.toggle("hidden", v!=="home");
-  profileView.classList.toggle("hidden", v!=="profile");
-  gameView.classList.toggle("hidden", v!=="game");
-  uploadView.classList.toggle("hidden", v!=="upload");
+  // Oculta todas las vistas
+  homeView.classList.add("hidden");
+  profileView.classList.add("hidden");
+  gameView.classList.add("hidden");
+  uploadView.classList.add("hidden");
+
+  // Muestra solo la seleccionada
+  if(v === "home") homeView.classList.remove("hidden");
+  if(v === "profile") profileView.classList.remove("hidden");
+  if(v === "game") gameView.classList.remove("hidden");
+  if(v === "upload") uploadView.classList.remove("hidden");
+
+  // Limpia posibles iframes duplicados
+  gamePreview.srcdoc = "";
+  fsFrame.srcdoc = "";
+
   updateFab();
 }
 
@@ -828,7 +840,6 @@ deleteGameBtn.onclick = async ()=>{
 
 /* ========= Perfil ========= */
 async function openProfile(userId){
-  toggleNickEditor(userId);
   viewingUserId=userId; setView("profile");
   let nickTxt="Usuario", emailTxt="";
   try{
@@ -837,6 +848,7 @@ async function openProfile(userId){
       nickTxt=arr[0].nickname||"Usuario";
       emailTxt=(arr[0].email||"");
     }
+    toggleNickEditor(userId);
   }catch{
     // fallback si no hay columna email
     const arr2 = await rest("GET","/rest/v1/profiles",{ query:{ select:"nickname", id:`eq.${userId}` } });
@@ -970,6 +982,7 @@ editGameBtn.onclick = ()=> {
 };
 
   // === Cambio de nickname ===
+const editNickBtn = $("editNickBtn");
 const nickEditBox = $("nickEditBox");
 const newNickInput = $("newNickInput");
 const saveNickBtn = $("saveNickBtn");
