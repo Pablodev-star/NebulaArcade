@@ -187,15 +187,13 @@ input:focus{box-shadow:0 0 0 4px #ffe08d60;border-color:#ffd24d;outline:none}
   <div id="profileView" class="hidden profileView">
     <div class="profileHeader">
       <div class="profileAvatar" id="profileAvatar">?</div>
-      <h2 id="profileName">Usuario</h2>
-      <div id="nickEditor" style="margin:10px 0;text-align:center;">
-        <button id="editNickBtn" class="btn" type="button" style="display:none;">✏️ Cambiar nickname</button>
-        <div id="nickEditBox" class="hidden" style="margin-top:8px;"> 
-    <input id="newNickInput" type="text" placeholder="Nuevo nickname" style="padding:8px 10px;border-radius:8px;border:1px solid #ddd;">
-    <button id="saveNickBtn" class="btn" type="button">💾 Guardar</button>
-    <button id="cancelNickBtn" class="btn" type="button" style="background:#eee;color:#222;">Cancelar</button>
-    <div id="nickMsg" class="status" style="margin-top:6px;"></div>
-    </div>
+   <h2 id="profileName" style="display:inline-block;position:relative;">Usuario<span id="editNickBtn" title="Cambiar nickname" style="display:none;cursor:pointer;font-size:18px;margin-left:6px;">✏️</span></h2>
+<div id="nickEditBox" class="hidden" style="margin-top:10px;text-align:center;">
+  <input id="newNickInput" type="text" placeholder="Nuevo nickname" style="padding:8px 10px;border-radius:8px;border:1px solid #ddd;max-width:250px;">
+  <button id="saveNickBtn" class="btn" type="button">💾 Guardar</button>
+  <button id="cancelNickBtn" class="btn" type="button" style="background:#eee;color:#222;">Cancelar</button>
+  <div id="nickMsg" class="status" style="margin-top:6px;"></div>
+</div>
     </div>
       <div class="stats">
         <div>❤️ <span id="likesCount">0</span> Likes</div>
@@ -972,7 +970,6 @@ editGameBtn.onclick = ()=> {
 };
 
   // === Cambio de nickname ===
-const editNickBtn = $("editNickBtn");
 const nickEditBox = $("nickEditBox");
 const newNickInput = $("newNickInput");
 const saveNickBtn = $("saveNickBtn");
@@ -1021,6 +1018,11 @@ saveNickBtn.onclick = async ()=>{
     // Refresca UI
     profileName.textContent=newNick;
     userNameTop.textContent=newNick;
+        // Actualiza también la sesión local
+    if(session?.user?.user_metadata){
+      session.user.user_metadata.nickname = newNick;
+      saveSession(session);
+    }
     nickMsg.textContent="✅ Nickname cambiado";
     setTimeout(()=>{
       editNickBtn.style.display="inline-block";
@@ -1036,16 +1038,49 @@ saveNickBtn.onclick = async ()=>{
   const patch = String.raw`
 <script>
 (function(){
+  // Evita reproducir sonidos por cualquier vía conocida
   function hush(){
-    document.querySelectorAll('audio,video').forEach(m=>{
-      try{m.muted=true;m.volume=0;m.pause();}catch(_){}
+    document.querySelectorAll('audio,video').forEach(el=>{
+      try{
+        el.muted = true;
+        el.volume = 0;
+        el.pause();
+      }catch(_){}
     });
   }
   hush();
   new MutationObserver(hush).observe(document.body,{childList:true,subtree:true});
-  setInterval(hush,700);
-  window.AudioContext=function(){throw new Error('Audio bloqueado');};
-  window.webkitAudioContext=function(){throw new Error('Audio bloqueado');};
+  setInterval(hush,800);
+
+  // Bloquea nuevos contextos de audio
+  const BlockedCtx = function(){
+    const e = new Error('Audio bloqueado en previews');
+    console.warn(e);
+    throw e;
+  };
+  window.AudioContext = BlockedCtx;
+  window.webkitAudioContext = BlockedCtx;
+
+  // Silencia también new Audio()
+  const _Audio = window.Audio;
+  window.Audio = function(){
+    const a = new _Audio(...arguments);
+    try{ a.muted = true; a.volume = 0; }catch(_){}
+    setTimeout(()=>{ try{ a.pause(); }catch(_){}} ,10);
+    return a;
+  };
+
+  // Captura cualquier intento de sonido desde librerías (p5.js, Tone.js, etc.)
+  Object.defineProperty(window, 'Tone', {
+    set: ()=>{ console.warn('Tone.js bloqueado en previews'); },
+    get: ()=>({ start:()=>{}, context:{ resume:()=>{} } })
+  });
+
+  // Silencia cualquier oscilador / WebAudio node
+  window.OscillatorNode = function(){
+    console.warn('OscillatorNode bloqueado en previews');
+    return { start:()=>{}, stop:()=>{} };
+  };
 })();
 <\/script>`;
   return html.replace("</body>", patch + "</body>");
