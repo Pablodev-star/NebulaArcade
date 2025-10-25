@@ -719,7 +719,10 @@ async function showVoters(type){
         <span class="miniAvatar">${showNebula?`<img src="${NEBULA_LOGO_URL}" alt="Nebula Glow">`:(name.charAt(0)||"U").toUpperCase()}</span>
         <span style="font-weight:700">${escapeHtml(name)}</span>
       `;
-      row.onclick=()=>openProfile(v.user_id);
+      row.onclick = () => {
+        openProfile(v.user_id);
+         votersModal.style.display = "none"; // 🔒 Cierra el modal
+      };
       votersList.appendChild(row);
     });
   }catch(e){
